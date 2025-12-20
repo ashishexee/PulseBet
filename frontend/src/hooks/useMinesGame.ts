@@ -2,30 +2,38 @@ import { useState, useCallback, useEffect } from 'react';
 import { useLineraWallet } from './useLineraWallet';
 
 export interface GameState {
+    owner: string;
     minesCount: number;
     betAmount: string;
     revealedTiles: number[];
-    mineIndices: number[];  // Added to show bombs when game ends
-    result: 'Active' | 'Won' | 'Lost' | 'CashedOut';
+    mineIndices: number[];
+    result: 'ACTIVE' | 'WON' | 'LOST' | 'CASHED_OUT';
     currentMultiplier: number;
 }
 
 export const useMinesGame = () => {
-    const { client, chainId, isConnected } = useLineraWallet();
+    const { client, chainId, isConnected, owner } = useLineraWallet();
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [loading, setLoading] = useState(false);
-    const [balance, setBalance] = useState<string>("0");
 
     const APP_ID = import.meta.env.VITE_MINES_APP_ID;
 
     // Helper to execute GraphQL on the application
     const executeQuery = useCallback(async (query: string, variables?: Record<string, any>) => {
-        if (!client || !chainId || !APP_ID) return null;
+        if (!client || !chainId || !APP_ID) {
+            console.log("executeQuery early return:", { client: !!client, chainId, APP_ID });
+            return null;
+        }
+        console.log("executeQuery called:", { APP_ID, chainId, hasClient: !!client });
         try {
             // 1. Get Chain
+            console.log("executeQuery chain:", { chainId });
             const chain = await client.chain(chainId);
+            console.log('Got Chain:', chain);
+            console.log('Getting ApplicationID: ', APP_ID);
             // 2. Get Application
             const app = await chain.application(APP_ID);
+            console.log('Got application Id', app);
             // 3. Execute Query (The SDK expects raw query string, maybe with variables interpolated or passed?)
             // The d.ts `query(query: string, options?: QueryOptions | null): Promise<string>;` suggests raw string.
             // We might need to handle variables manually or JSON.stringify(variables).
@@ -56,7 +64,10 @@ export const useMinesGame = () => {
 
             // async-graphql expects: {"query": "..."} not just the raw query string
             const requestBody = JSON.stringify({ query: formattedQuery });
+            console.log("Sending query:", requestBody);
+
             const responseJson = await app.query(requestBody);
+            console.log("Raw response:", responseJson);
             // The d.ts signature: query(query: string, options?: QueryOptions): Promise<string>
             // No variables arg. We likely have to embed variables or use a different method.
             // Or `query` is just the JSON body?
@@ -66,6 +77,7 @@ export const useMinesGame = () => {
             // instead of named variables in the query string.
 
             const response = JSON.parse(responseJson);
+            console.log("Parsed response:", response);
             return response.data;
         } catch (e) {
             console.error("GraphQL execution failed:", e);
@@ -75,9 +87,9 @@ export const useMinesGame = () => {
 
     const refreshState = useCallback(async () => {
         if (!isConnected) return;
-        // Fixed: Remove 'query' wrapper, just use selection set
         const FETCH_GAME_STATE = `{
             activeGame {
+                owner
                 minesCount
                 betAmount
                 revealedTiles
@@ -85,13 +97,13 @@ export const useMinesGame = () => {
                 result
                 currentMultiplier
             }
-            balance
         }`;
 
         try {
             const data = await executeQuery(FETCH_GAME_STATE);
             if (data?.activeGame) {
                 setGameState({
+                    owner: data.activeGame.owner,
                     minesCount: data.activeGame.minesCount,
                     betAmount: data.activeGame.betAmount,
                     revealedTiles: data.activeGame.revealedTiles,
@@ -102,10 +114,6 @@ export const useMinesGame = () => {
             } else {
                 setGameState(null);
             }
-            // Use contract balance, not native chain balance
-            if (data?.balance !== undefined) {
-                setBalance(data.balance.toString());
-            }
         } catch (e) {
             // console.error(e);
         }
@@ -113,15 +121,26 @@ export const useMinesGame = () => {
 
     // Mutations - constructing raw strings since `variables` arg is missing in SDK
     const startGame = async (amount: number, mines: number) => {
+        if (!owner) {
+            console.error("Bet failed: Wallet not connected, owner is null");
+            throw new Error("Wallet not connected");
+        }
+        if (!APP_ID) {
+            console.error("Bet failed: VITE_MINES_APP_ID not set");
+            throw new Error("Mines App ID not configured");
+        }
+        console.log("Starting bet:", { amount, mines, owner, APP_ID });
         setLoading(true);
-        const mutation = `{
-            bet(amount: ${amount}, minesCount: ${mines})
+        const mutation = `mutation {
+            bet(amount: ${amount}, minesCount: ${mines}, owner: "${owner}")
         }`;
+        console.log("Bet mutation:", mutation);
         try {
-            await executeQuery(mutation);
+            const result = await executeQuery(mutation);
+            console.log("Bet result:", result);
             await refreshState();
         } catch (e) {
-            // console.error("Bet failed:", e);
+            console.error("Bet failed:", e);
         } finally {
             setLoading(false);
         }
@@ -129,7 +148,7 @@ export const useMinesGame = () => {
 
     const revealTile = async (tileId: number) => {
         setLoading(true);
-        const mutation = `{
+        const mutation = `mutation {
             reveal(tileId: ${tileId})
         }`;
         try {
@@ -145,7 +164,7 @@ export const useMinesGame = () => {
     const cashOut = async () => {
         setLoading(true);
         // Fixed: Use snake_case mutation name to match contract
-        const mutation = `{
+        const mutation = `mutation {
             cashOut
         }`;
         try {
@@ -166,7 +185,6 @@ export const useMinesGame = () => {
 
     return {
         gameState,
-        balance,
         loading,
         startGame,
         revealTile,

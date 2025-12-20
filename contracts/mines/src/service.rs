@@ -37,7 +37,6 @@ impl Service for MinesService {
     }
 
     async fn handle_query(&self, request: Request) -> Response {
-        let balance = *self.state.balance.get();
         let game_opt = self.state.active_game.get();
         
         let public_game = game_opt.as_ref().map(|game| {
@@ -48,6 +47,7 @@ impl Service for MinesService {
             };
 
             PublicGame {
+                owner: game.owner.clone(),
                 mines_count: game.mines_count,
                 bet_amount: game.bet_amount,
                 revealed_tiles: game.revealed_tiles.clone(),
@@ -58,7 +58,7 @@ impl Service for MinesService {
         });
 
         let schema = Schema::build(
-            QueryRoot { public_game, balance },
+            QueryRoot { public_game },
             MutationRoot { runtime: self.runtime.clone() },
             EmptySubscription,
         )
@@ -69,15 +69,10 @@ impl Service for MinesService {
 
 struct QueryRoot {
     public_game: Option<PublicGame>,
-    balance: u64,
 }
 
 #[Object]
 impl QueryRoot {
-    async fn balance(&self) -> u64 {
-        self.balance
-    }
-
     async fn active_game(&self) -> &Option<PublicGame> {
         &self.public_game
     }
@@ -89,8 +84,8 @@ struct MutationRoot {
 
 #[Object]
 impl MutationRoot {
-    async fn bet(&self, amount: u64, mines_count: u8) -> Vec<u8> {
-        let op = Operation::Bet { amount, mines_count };
+    async fn bet(&self, amount: u64, mines_count: u8, owner: String) -> Vec<u8> {
+        let op = Operation::Bet { amount, mines_count, owner };
         self.runtime.schedule_operation(&op);
         Vec::new()
     }
@@ -110,10 +105,11 @@ impl MutationRoot {
 
 #[derive(SimpleObject)]
 pub struct PublicGame {
+    pub owner: String,
     pub mines_count: u8,
     pub bet_amount: u64,
     pub revealed_tiles: Vec<u8>,
     pub mine_indices: Vec<u8>, 
     pub result: GameResult,
-    pub current_multiplier: f64,
+    pub current_multiplier: u64,  // Stored as percentage (100 = 1.0x)
 }

@@ -55,7 +55,14 @@ impl Contract for PulseTokenContract {
             Operation::Mint { owner, amount } => {
                 self.state.credit(owner, amount).await;
             }
-
+        // Handle GameDebit (called by Mines contract for betting)
+            Operation::GameDebit { owner, amount } => {
+                self.state.debit(owner, amount).await;
+            }
+        // Handle GameCredit (called by Mines contract for winnings)
+            Operation::GameCredit { owner, amount } => {
+                self.state.credit(owner, amount).await;
+            }
         }
     }
 

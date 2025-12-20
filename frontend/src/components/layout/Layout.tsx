@@ -21,7 +21,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 >
                     <Sidebar />
                 </aside>
-                <main className="flex-1 p-6 overflow-x-hidden">
+                <main className="flex-1 p-6 pt-20 overflow-x-hidden">
                     <div className="max-w-[1200px] mx-auto">
                         {children}
                     </div>

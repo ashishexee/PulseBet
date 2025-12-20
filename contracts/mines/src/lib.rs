@@ -2,8 +2,14 @@ use async_graphql::{Enum, Request, Response};
 use linera_sdk::{
     abi::{ContractAbi, ServiceAbi},
     graphql::GraphQLMutationRoot,
+    linera_base_types::ApplicationId,
 };
 use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct InstantiationArgument {
+    pub pulse_token_id: ApplicationId,
+}
 
 pub struct MinesAbi;
 
@@ -19,8 +25,14 @@ impl ServiceAbi for MinesAbi {
 
 #[derive(Debug, Deserialize, Serialize, GraphQLMutationRoot)]
 pub enum Operation {
-    Bet { amount: u64, mines_count: u8 },
-    Reveal { tile_id: u8 },
+    Bet {
+        amount: u64,
+        mines_count: u8,
+        owner: String,
+    },
+    Reveal {
+        tile_id: u8,
+    },
     CashOut,
 }
 

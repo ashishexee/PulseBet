@@ -28,6 +28,16 @@ pub enum Operation {
         owner: AccountOwner,
         amount: Amount,
     },
+    /// Called by Mines contract to debit tokens for betting
+    GameDebit {
+        owner: AccountOwner,
+        amount: Amount,
+    },
+    /// Called by Mines contract to credit winnings
+    GameCredit {
+        owner: AccountOwner,
+        amount: Amount,
+    },
 }
 
 #[derive(Debug, Deserialize, Serialize)]
