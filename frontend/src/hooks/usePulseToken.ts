@@ -13,8 +13,10 @@ export const usePulseToken = () => {
         try {
             const query = `{ balance(owner: "${owner}") }`;
 
+            // async-graphql expects: {"query": "..."} not just the raw query string
+            const requestBody = JSON.stringify({ query });
             const app = await getApplication(PULSE_TOKEN_APP_ID);
-            const result = await app.query(query);
+            const result = await app.query(requestBody);
 
             console.log("PulseToken Balance:", result);
             const data = JSON.parse(result);
@@ -34,8 +36,11 @@ export const usePulseToken = () => {
                 mint(owner: "${owner}", amount: "${amount}")
             }
         `;
+
+        // async-graphql expects: {"query": "..."} not just the raw query string
+        const requestBody = JSON.stringify({ query: mutation });
         const app = await getApplication(PULSE_TOKEN_APP_ID);
-        await app.query(mutation);
+        await app.query(requestBody);
 
         await fetchTokenBalance();
     }, [getApplication, client, chainId, owner, fetchTokenBalance]);

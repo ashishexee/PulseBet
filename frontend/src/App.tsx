@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { Mines } from './pages/Mines';
-import { Faucets } from './pages/Faucets';
+import Faucets from './pages/Faucets';
 
 function App() {
   return (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Gem } from 'lucide-react';
+import { Gem, Bomb } from 'lucide-react';
 import { useMinesGame } from '../hooks/useMinesGame';
 import { useLineraWallet } from '../hooks/useLineraWallet';
 
@@ -17,23 +17,29 @@ export const Mines = () => {
     const revealedTiles = gameState?.revealedTiles || [];
     const isGameOver = gameState?.result === 'Lost';
 
-    // Determine tile state
+    // Determine tile state and content
     const getTileContent = (id: number) => {
-        if (!revealedTiles.includes(id)) {
-            // Show mine if game over (and lost), otherwise generic cover
-            if (isGameOver && gameState?.result === 'Lost') {
-                // In a real app, we would fetch the full mine locations here if the contract reveals them
-                // For now, we only show what we revealed.
-                return null;
-            }
-            return null;
+        const isRevealed = revealedTiles.includes(id);
+        const isMine = gameState?.mineIndices?.includes(id) || false;
+
+        // Only show mine if game is over (lost, won, or cashed out) and it's a mine
+        const showMine = isMine && isGameOver;
+
+        if (!isRevealed && !showMine) {
+            return null; // Hidden tile
         }
 
-        // If it's a revealed tile, it must be a Gem unless it was the one that killed us
-        // Simplified Logic: The contract only adds "safe" tiles to revealed_tiles if game is active/won.
-        // If we lost, the last revealed tile MIGHT be the bomb. 
-        // We need the `mine_indices` from the service to show all bombs on loss.
-        return <Gem className="w-8 h-8 text-[#00e701] drop-shadow-[0_0_15px_rgba(0,231,1,0.6)] animate-bounce" />;
+        if (showMine || (isRevealed && isMine)) {
+            // Show bomb (red glow)
+            return <Bomb className="w-8 h-8 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]" />;
+        }
+
+        if (isRevealed && !isMine) {
+            // Show diamond (green glow)
+            return <Gem className="w-8 h-8 text-[#00e701] drop-shadow-[0_0_15px_rgba(0,231,1,0.6)] animate-bounce" />;
+        }
+
+        return null;
     };
 
 
@@ -108,23 +114,29 @@ export const Mines = () => {
 
                 {/* Game Grid */}
                 <div className="grid grid-cols-5 gap-3 w-full max-w-[500px] aspect-square">
-                    {Array.from({ length: 25 }).map((_, i) => (
-                        <button
-                            key={i}
-                            disabled={!isGameActive || revealedTiles.includes(i) || loading}
-                            onClick={() => revealTile(i)}
-                            className={`
+                    {Array.from({ length: 25 }).map((_, i) => {
+                        const isRevealed = revealedTiles.includes(i);
+                        const isMine = gameState?.mineIndices?.includes(i) || false;
+                        const showMine = isMine && isGameOver;
+
+                        return (
+                            <button
+                                key={i}
+                                disabled={!isGameActive || isRevealed || loading}
+                                onClick={() => revealTile(i)}
+                                className={`
                                     rounded-lg transition-all duration-200 relative overflow-hidden active:scale-95 flex items-center justify-center
-                                    ${revealedTiles.includes(i)
-                                    ? 'bg-[#071824] border-b-0 translate-y-1' // Revealed State
-                                    : 'bg-[#2f4553] hover:bg-[#3c5566] hover:-translate-y-1 border-b-4 border-[#1a2c38] shadow-lg' // Hidden State
-                                }
-                                    ${!isGameActive && !revealedTiles.includes(i) ? 'opacity-50 cursor-not-allowed' : ''}
+                                    ${isRevealed || showMine
+                                        ? `bg-[#071824] border-b-0 translate-y-1 ${showMine ? 'ring-2 ring-red-500' : ''}` // Revealed/Mine State
+                                        : 'bg-[#2f4553] hover:bg-[#3c5566] hover:-translate-y-1 border-b-4 border-[#1a2c38] shadow-lg' // Hidden State
+                                    }
+                                    ${!isGameActive && !isRevealed ? 'opacity-50 cursor-not-allowed' : ''}
                                 `}
-                        >
-                            {revealedTiles.includes(i) && getTileContent(i)}
-                        </button>
-                    ))}
+                            >
+                                {getTileContent(i)}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
         </div>
