@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@linera/client": "^0.15.8",
     "clsx": "^2.1.1",
+    "ethers": "^6.16.0",
+    "graphql-request": "^7.4.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

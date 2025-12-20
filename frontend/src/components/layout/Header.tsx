@@ -1,31 +1,64 @@
-import { Menu, Wallet } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { Hammer, Wallet, LogOut } from "lucide-react";
+import { useLineraWallet } from "../../hooks/useLineraWallet";
 
 interface HeaderProps {
     toggleSidebar: () => void;
 }
 
-export const Header = ({ toggleSidebar }: HeaderProps) => {
+export function Header({ toggleSidebar }: HeaderProps) {
+    const { isConnected, connect, disconnect, chainId, balance, owner } = useLineraWallet();
+    const navigate = useNavigate();
+
     return (
-        <header className="h-[60px] flex items-center justify-between px-4 bg-[var(--bg-darker)] shadow-md sticky top-0 z-50 border-b border-[#213743]">
-            {/* Left Section: Menu + Logo */}
-            <div className="flex items-center gap-4">
-                <button onClick={toggleSidebar} className="text-[var(--text-secondary)] hover:text-white transition-colors">
-                    <Menu size={20} />
+        <header className="fixed top-0 left-0 right-0 h-16 bg-[#0F172A] border-b border-[#1E293B] flex items-center justify-between px-6 z-50">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+                {/* Menu Button for Mobile/Toggle */}
+                <button onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="mr-2 text-gray-400 hover:text-white">
+                    <Hammer className="w-6 h-6 rotate-90" />
                 </button>
-                <div className="flex items-center gap-2">
-                    <Link to="/">
-                        <span className="text-2xl font-bold italic tracking-tight text-white select-none cursor-pointer">PulseBet</span>
-                    </Link>
-                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-[#3B82F6] to-[#2563EB] bg-clip-text text-transparent">
+                    PulseBet
+                </span>
             </div>
 
-            {/* Right Section: Connect Wallet */}
-            <div className="flex items-center gap-3">
-                <button className="bg-[var(--primary-blue)] text-white px-4 py-2 rounded-[4px] font-semibold hover:bg-[var(--primary-blue-hover)] transition-colors text-sm shadow-[0_4px_14px_0_rgb(0,118,255,0.39)] flex items-center gap-2">
-                    <Wallet size={16} />
-                    Connect Wallet
-                </button>
+            <div className="flex items-center gap-4">
+                {isConnected ? (
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-end mr-4">
+                            <span className="text-xs text-gray-400">Address</span>
+                            <span className="text-sm font-mono text-green-400 max-w-[100px] truncate" title={owner || ""}>
+                                {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : "..."}
+                            </span>
+                        </div>
+                        <div className="flex flex-col items-end mr-4">
+                            <span className="text-xs text-gray-400">Chain ID</span>
+                            <span className="text-sm font-mono text-blue-400 max-w-[100px] truncate" title={chainId || ""}>
+                                {chainId ? `${chainId.slice(0, 6)}...${chainId.slice(-4)}` : "Loading..."}
+                            </span>
+                        </div>
+                        {balance && (
+                            <div className="bg-[#1E293B] px-3 py-1.5 rounded-lg border border-[#334155]">
+                                <span className="font-medium text-[#3B82F6]">{balance} BUILD</span>
+                            </div>
+                        )}
+                        <button
+                            onClick={disconnect}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span>Disconnect</span>
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={connect}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium transition-all shadow-lg shadow-blue-500/20 cursor-pointer"
+                    >
+                        <Wallet className="w-4 h-4" />
+                        <span>Connect MetaMask</span>
+                    </button>
+                )}
             </div>
         </header>
     );
