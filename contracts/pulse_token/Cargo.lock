@@ -2769,21 +2769,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
-name = "mines"
-version = "0.1.0"
-dependencies = [
- "async-graphql",
- "bcs",
- "futures",
- "linera-base",
- "linera-sdk",
- "linera-views",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3287,6 +3272,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "pulse_token"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "futures",
+ "linera-sdk",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

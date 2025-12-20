@@ -10,7 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@linera/client": "^0.15.8",
+    "@linera/client": "^0.15.7",
+    "@linera/signer": "^0.15.6",
     "clsx": "^2.1.1",
     "ethers": "^6.16.0",
     "graphql-request": "^7.4.0",

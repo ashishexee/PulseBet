@@ -1,9 +1,7 @@
 import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
-import { MetaMask } from "../utils/metamask";
-
-// Helper to bypass Webpack for the browser client
-const dynamicImport = (path: string) =>
-    (new Function("p", "return import(p);"))(path) as Promise<any>;
+import { Wallet } from "ethers"; // For generating mnemonic
+import { PrivateKey } from "@linera/signer";
+import { initialize, Client, Faucet } from "@linera/client";
 
 // Define the context type
 interface LineraWalletContextType {
@@ -14,6 +12,7 @@ interface LineraWalletContextType {
     owner: string | null;
     balance: string | null;
     client: any | null;
+    getApplication: (applicationId: string) => Promise<any>;
     connect: () => Promise<void>;
     disconnect: () => void;
     requestFaucet: () => Promise<void>;
@@ -28,185 +27,146 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     const [isConnecting, setIsConnecting] = useState(false);
     const [owner, setOwner] = useState<string | null>(null);
     const [chainId, setChainId] = useState<string | null>(null);
-    // Note: Reference impl didn't expose balance in context, only chainId.
-    // I will keep balance state but it might need manual fetch if not in reference logic.
     const [balance, setBalance] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const clientRef = useRef<any>(null);
-    const lineraModule = useRef<any>(null);
+    // Key fix: Use state for client to trigger re-renders in consumers
+    const [clientInstance, setClientInstance] = useState<any>(null);
 
-    // 1. Initialize WASM logic on mount
+    // Refs for internal logic that doesn't need to trigger re-renders itself
+    const clientRef = useRef<any>(null);
+    const initRef = useRef(false);
+
+    const fetchBalance = useCallback(async () => {
+        if (!chainId || !clientRef.current) return;
+        try {
+            const chain = await clientRef.current.chain(chainId);
+            const bal = await chain.balance();
+            setBalance(bal?.toString() || "0");
+        } catch (e) {
+            console.warn("Client fetch failed:", e);
+        }
+    }, [chainId]);
+
+    // Poll for balance updates
     useEffect(() => {
-        const initWasm = async () => {
-            // Check for Cross-Origin Isolation (Required for SharedArrayBuffer)
+        if (isConnected && chainId) {
+            fetchBalance();
+            const interval = setInterval(fetchBalance, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [isConnected, chainId, fetchBalance]);
+
+    const initializeWallet = async () => {
+        if (initRef.current) return;
+        initRef.current = true;
+
+        setIsConnecting(true);
+        try {
             if (!window.crossOriginIsolated) {
-                const errorMsg = "Linera Requirements: App is not Cross-Origin Isolated. Wasm threads will fail. PLEASE RESTART VITE SERVER (`npm run dev`) to apply header changes.";
+                const errorMsg = "Linera Requirements: App is not Cross-Origin Isolated. Wasm threads will fail.";
                 console.error(errorMsg);
                 setError("Missing Server Headers (Restart Required)");
                 return;
             }
 
-            try {
-                // Dynamically import from public/js folder
-                const linera = await dynamicImport("/js/@linera/client/linera.js");
-                await linera.default();
-                lineraModule.current = linera;
-                setIsReady(true);
-                console.log("Linera WASM initialized");
-            } catch (err: any) {
-                console.error("Failed to load Linera WASM:", err);
-                setError("Failed to load Linera Core");
-            }
-        };
-        initWasm();
-    }, []);
+            await initialize();
+            setIsReady(true);
+            console.log("Linera WASM initialized");
 
-    const fetchBalance = useCallback(async () => {
-        if (!clientRef.current || !chainId) return;
-        try {
-            const chain = await clientRef.current.chain(chainId);
-            const bal = await chain.balance();
-            // The balance might return as a complex object or string depending on version.
-            // Based on useMinesGame, it seems to be a valid value for setBalance.
-            setBalance(bal?.toString() || "0");
-        } catch (e) {
-            console.error("Failed to fetch balance:", e);
-        }
-    }, [chainId]); // clientRef is stable
-
-    // 3. Poll for balance updates
-    useEffect(() => {
-        if (isConnected && chainId) {
-            fetchBalance();
-            const interval = setInterval(fetchBalance, 5000); // 5s poll
-            return () => clearInterval(interval);
-        }
-    }, [isConnected, chainId, fetchBalance]);
-
-    // 2. Auto-Connect Effect
-    useEffect(() => {
-        if (isReady && localStorage.getItem("linera_auto_connect") === "true") {
-            connect();
-        }
-    }, [isReady]);
-
-    const connect = useCallback(async () => {
-        if (!lineraModule.current) return;
-        setIsConnecting(true);
-        setError(null);
-
-        try {
-            const linera = lineraModule.current;
-            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL ?? "https://faucet.testnet-conway.linera.net";
-            console.log("Using Faucet:", faucetUrl);
-
-            // Initialize Faucet
-            const faucet = await new linera.Faucet(faucetUrl);
-
-            // Connect to MetaMask
-            const signer = new MetaMask();
-
-            // This will prompt if not already connected
-            const addr = await signer.address();
-            setOwner(addr);
-            console.log("MetaMask connected:", addr);
-
-            // Create Wallet (needed for Client structure)
-            console.log("Creating local wallet container...");
-            const wallet = await faucet.createWallet();
-
-            let chain = localStorage.getItem("linera_chain_id");
-            if (!chain) {
-                console.log("No stored chain, claiming new one...");
-                chain = await faucet.claimChain(wallet, addr); // returns string
-                localStorage.setItem("linera_chain_id", chain as string);
+            let mnemonic = localStorage.getItem('linera_mnemonic');
+            if (!mnemonic) {
+                const generated = Wallet.createRandom();
+                const phrase = generated.mnemonic?.phrase;
+                if (!phrase) throw new Error('Failed to generate mnemonic');
+                mnemonic = phrase;
+                localStorage.setItem('linera_mnemonic', mnemonic);
+                console.log("Created new Burner Wallet");
             } else {
-                console.log("Resuming session for chain:", chain);
+                console.log("Loaded existing Burner Wallet");
             }
 
-            const validChain = chain as string;
+            const signer = PrivateKey.fromMnemonic(mnemonic);
+            const addr = (signer as any).wallet.address;
+            setOwner(addr);
+            console.log("Signer Address:", addr);
 
-            setChainId(validChain);
-            console.log("Chain ID:", validChain);
-
-            setIsConnected(true);
-
-            // Create Client
-            console.log("Initializing Client...");
-            const newClient = await new linera.Client(wallet, signer, null);
-            clientRef.current = newClient;
-            console.log("Client Initialized");
-
-            // Initial Fetch
-            // We need to wait a tick or use the new client ref directly
-            // But fetchBalance uses clientRef.current which is now set.
-            // Let's call it direct or let the effect handle it.
-            // The effect depends on `isConnected` and `chainId`, which are set.
-            // So it should trigger automatically.
-
-            // Success state part 2
-            localStorage.setItem("linera_auto_connect", "true");
-            localStorage.setItem("linera_chain_id", validChain);
-
-            // setBalance("0") <- Removed, let fetch logic handle it.
-
-        } catch (err: any) {
-            console.error("Connection failed:", err);
-            setError(err?.message ?? "Failed to connect wallet");
-            localStorage.removeItem("linera_auto_connect");
-        } finally {
-            setIsConnecting(false);
-        }
-    }, [isReady]);
-
-    const disconnect = useCallback(() => {
-        setIsConnected(false);
-        setOwner(null);
-        setChainId(null);
-        setBalance(null);
-        clientRef.current = null;
-        localStorage.removeItem("linera_auto_connect");
-        localStorage.removeItem("linera_chain_id");
-    }, []);
-
-    const requestFaucet = useCallback(async () => {
-        if (!lineraModule.current || !owner) return;
-
-        try {
-            const linera = lineraModule.current;
-            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL ?? "https://faucet.testnet-conway.linera.net";
-            const faucet = await new linera.Faucet(faucetUrl);
-            const signer = new MetaMask();
-
-            // We essentially re-claim a chain and update persistence
-            // In Testnet, this often grants a new chain with initial funds (e.g. 10 tokens), or tops up.
-            console.log("Requesting funds (re-claiming chain)...");
+            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net";
+            console.log("Using Faucet:", faucetUrl);
+            const faucet = new Faucet(faucetUrl);
+            console.log("Creating/Resuming Wallet...");
             const wallet = await faucet.createWallet();
-            // Clear local storage before fetching new chain
-            localStorage.removeItem("linera_chain_id");
-            const chain = await faucet.claimChain(wallet, owner);
 
-            // Update State
+            console.log("Claiming Chain...");
+            const chain = await faucet.claimChain(wallet, addr);
+
             setChainId(chain);
-            // setBalance("10") <- Removed, use fetchBalance
             localStorage.setItem("linera_chain_id", chain);
+            console.log("Chain ID:", chain);
 
-            console.log("Funds requested. New Chain ID/State:", chain);
-
-            // Re-bind client to new wallet/chain
-            const newClient = await new linera.Client(wallet, signer, null);
-            clientRef.current = newClient;
-
-            // Trigger fetch immediately
-            // We can't call fetchBalance easily here as it depends on state that might not be flushed.
-            // But updating `chainId` triggers the effect re-run which calls `fetchBalance`.
+            console.log("Initializing Client...");
+            setIsConnected(true);
+            setIsConnecting(false);
+            (async () => {
+                try {
+                    const newClient = await new Client(wallet, signer, null)
+                    clientRef.current = newClient;
+                    setClientInstance(newClient);
+                    console.log("Client Ready!");
+                    fetchBalance();
+                } catch (err: any) {
+                    console.error("Client Init Failed:", err);
+                    setError("Client Synchronization Failed. Check console.");
+                }
+            })();
 
         } catch (e: any) {
-            console.error("Faucet request failed:", e);
-            throw e;
+            console.error("Initialization Failed:", e);
+            setError(e.message || "Failed to initialize wallet");
+            setIsConnecting(false);
         }
-    }, [owner, isReady]);
+    };
+
+    useEffect(() => {
+        initializeWallet();
+    }, []);
+
+    // Manual connect/disconnect becomes a reset or no-op since we auto-connect burner
+    const connect = async () => {
+        // Force re-init?
+        window.location.reload();
+    };
+
+    const disconnect = useCallback(() => {
+        // Clear mnemonic to "logout"
+        localStorage.removeItem("linera_mnemonic");
+        window.location.reload();
+    }, []);
+
+    const getApplication = useCallback(async (applicationId: string) => {
+        if (!clientRef.current || !chainId) {
+            throw new Error("Client not ready or chain ID missing");
+        }
+        const chain = await clientRef.current.chain(chainId);
+        return await chain.application(applicationId);
+    }, [chainId]);
+
+    const requestFaucet = useCallback(async () => {
+        // Burner wallet request logic (re-claim chain usually grants funds)
+        if (!owner || !clientRef.current) return;
+        try {
+            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net";
+            const faucet = new Faucet(faucetUrl);
+            const wallet = await faucet.createWallet();
+            const chain = await faucet.claimChain(wallet, owner); // This often grants 10 tokens
+
+            console.log("Funds requested, chain updated:", chain);
+            fetchBalance();
+        } catch (e: any) {
+            console.error(e);
+            setError(e.message || "Failed to request faucet funds");
+        }
+    }, [owner, fetchBalance]);
 
     return (
         <LineraWalletContext.Provider value={{
@@ -216,7 +176,8 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             chainId,
             owner,
             balance,
-            client: clientRef.current,
+            client: clientInstance, // Use state here!
+            getApplication,
             connect,
             disconnect,
             requestFaucet,

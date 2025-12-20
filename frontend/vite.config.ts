@@ -9,4 +9,10 @@ export default defineConfig({
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
+  optimizeDeps: {
+    exclude: ['@linera/client', '@linera/signer'],
+  },
+  worker: {
+    format: 'es',
+  },
 })

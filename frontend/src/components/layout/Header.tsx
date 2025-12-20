@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Hammer, Wallet, LogOut } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
+import { usePulseToken } from "../../hooks/usePulseToken";
 
 interface HeaderProps {
     toggleSidebar: () => void;
@@ -8,6 +9,7 @@ interface HeaderProps {
 
 export function Header({ toggleSidebar }: HeaderProps) {
     const { isConnected, connect, disconnect, chainId, balance, owner } = useLineraWallet();
+    const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
 
     return (
@@ -37,11 +39,18 @@ export function Header({ toggleSidebar }: HeaderProps) {
                                 {chainId ? `${chainId.slice(0, 6)}...${chainId.slice(-4)}` : "Loading..."}
                             </span>
                         </div>
-                        {balance && (
-                            <div className="bg-[#1E293B] px-3 py-1.5 rounded-lg border border-[#334155]">
-                                <span className="font-medium text-[#3B82F6]">{balance} BUILD</span>
+                        <div className="flex flex-col items-end mr-4">
+                            <span className="text-xs text-gray-400">Balance</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono text-pink-500" title="PulseToken">
+                                    {tokenBalance ?? "..."} PULSE
+                                </span>
+                                <span className="text-xs text-gray-600">|</span>
+                                <span className="text-sm font-mono text-[#3B82F6]" title="Native BUILD">
+                                    {balance !== null ? `${balance} BUILD` : "..."}
+                                </span>
                             </div>
-                        )}
+                        </div>
                         <button
                             onClick={disconnect}
                             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer"
