@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Gem, Bomb } from 'lucide-react';
 import { useMinesGame } from '../hooks/useMinesGame';
 import { useLineraWallet } from '../hooks/useLineraWallet';
+import { usePulseToken } from '../hooks/usePulseToken';
 
 export const Mines = () => {
     // Game Hooks
-    const { gameState, balance, loading, startGame, revealTile, cashOut } = useMinesGame();
+    const { gameState, loading, startGame, revealTile, cashOut } = useMinesGame();
     const { isConnected, connect } = useLineraWallet();
+    const { tokenBalance } = usePulseToken();  // Use PulseToken balance
 
     // Local UI State
     const [betAmount, setBetAmount] = useState<number>(0);
@@ -59,7 +61,7 @@ export const Mines = () => {
                                 disabled={isGameActive}
                                 className="bg-transparent text-white font-bold w-full outline-none"
                             />
-                            <span className="text-yellow-500 font-bold">₿</span>
+                            <span className="text-purple-400 font-bold text-sm">PULSE</span>
                         </div>
                         <div className="flex gap-1">
                             <button className="bg-[#2f4553] text-[#b1bad3] text-xs font-bold px-3 py-1.5 rounded hover:bg-[#3c5566] transition-colors" onClick={() => setBetAmount(betAmount / 2)} disabled={isGameActive}>½</button>
@@ -103,7 +105,7 @@ export const Mines = () => {
                 {/* Local Wallet Balance Display */}
                 {isConnected && (
                     <div className="text-center text-sm font-bold text-[#b1bad3]">
-                        Balance: {balance}
+                        Balance: {tokenBalance || '0'} PULSE
                     </div>
                 )}
 
