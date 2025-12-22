@@ -1,6 +1,7 @@
 import {
     Pickaxe,
-    Coins
+    Coins,
+    Trophy
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -9,11 +10,15 @@ export const Sidebar = () => {
     const [activeTab, setActiveTab] = useState<'casino' | 'sports'>('casino');
     const location = useLocation();
 
-    const navItems = [
+  const casinoItems = [
         { icon: <Pickaxe size={16} />, label: 'Mines', path: '/games/mining' },
         { icon: <Coins size={16} />, label: 'Faucets', path: '/mining/faucets' },
     ];
 
+    const sportsItems = [
+        { icon: <Trophy size={16} />, label: 'Sports Betting', path: '/sports/betting' },
+    ];
+    const navItems = activeTab === 'casino' ? casinoItems : sportsItems;
     const isActive = (path?: string) => path && location.pathname === path;
 
     return (
