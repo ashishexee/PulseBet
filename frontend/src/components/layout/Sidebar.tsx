@@ -1,6 +1,7 @@
 import {
     Pickaxe,
-    Coins
+    Coins,
+    Brain
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -12,6 +13,7 @@ export const Sidebar = () => {
     const navItems = [
         { icon: <Pickaxe size={16} />, label: 'Mines', path: '/games/mining' },
         { icon: <Coins size={16} />, label: 'Faucets', path: '/mining/faucets' },
+        { icon: <Brain size={16} />, label: 'Memory', path: '/games/memory' }
     ];
 
     const isActive = (path?: string) => path && location.pathname === path;

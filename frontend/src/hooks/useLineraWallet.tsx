@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
-import { Wallet } from "ethers"; // For generating mnemonic
+import { Wallet } from "ethers";
 import { PrivateKey } from "@linera/signer";
 import { initialize, Client, Faucet } from "@linera/client";
 
-// Define the context type
 interface LineraWalletContextType {
     isReady: boolean;
     isConnected: boolean;
@@ -30,10 +29,8 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     const [balance, setBalance] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Key fix: Use state for client to trigger re-renders in consumers
     const [clientInstance, setClientInstance] = useState<any>(null);
 
-    // Refs for internal logic that doesn't need to trigger re-renders itself
     const clientRef = useRef<any>(null);
     const initRef = useRef(false);
 
@@ -48,7 +45,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
         }
     }, [chainId]);
 
-    // Poll for balance updates
     useEffect(() => {
         if (isConnected && chainId) {
             fetchBalance();
@@ -108,16 +104,15 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             setIsConnected(true);
             setIsConnecting(false);
             (async () => {
-                try {
-                    const newClient = await new Client(wallet, signer, null)
+                    const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
+                    const nodeUrl = envUrl || "https://testnet-conway.linera.net";
+                    console.log("Using Node URL:", nodeUrl);
+                    const options = { validators: [nodeUrl] };
+                    const newClient = await new Client(wallet, signer, options as any);
                     clientRef.current = newClient;
                     setClientInstance(newClient);
                     console.log("Client Ready!");
                     fetchBalance();
-                } catch (err: any) {
-                    console.error("Client Init Failed:", err);
-                    setError("Client Synchronization Failed. Check console.");
-                }
             })();
 
         } catch (e: any) {
@@ -131,15 +126,39 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
         initializeWallet();
     }, []);
 
-    // Manual connect/disconnect becomes a reset or no-op since we auto-connect burner
     const connect = async () => {
-        // Force re-init?
         window.location.reload();
     };
 
-    const disconnect = useCallback(() => {
-        // Clear mnemonic to "logout"
-        localStorage.removeItem("linera_mnemonic");
+    const disconnect = useCallback(async () => {
+        console.log("Resetting Network...");
+        localStorage.clear(); // Clear all local storage to be safe
+
+        try {
+            if (window.indexedDB && window.indexedDB.databases) {
+                const dbs = await window.indexedDB.databases();
+                const promises = dbs.map(db => {
+                    if (db.name) {
+                        return new Promise<void>((resolve, reject) => {
+                            console.log("Deleting DB:", db.name);
+                            const req = window.indexedDB.deleteDatabase(db.name!);
+                            req.onsuccess = () => resolve();
+                            req.onerror = () => reject("Failed to delete " + db.name);
+                            req.onblocked = () => {
+                                console.warn("Delete blocked: " + db.name);
+                                resolve(); // Proceed anyway
+                            };
+                        });
+                    }
+                    return Promise.resolve();
+                });
+                await Promise.all(promises);
+            }
+        } catch (e) {
+            console.warn("Could not clear IndexedDB:", e);
+        }
+
+        console.log("Reset Complete. Reloading...");
         window.location.reload();
     }, []);
 
@@ -152,13 +171,12 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     }, [chainId]);
 
     const requestFaucet = useCallback(async () => {
-        // Burner wallet request logic (re-claim chain usually grants funds)
         if (!owner || !clientRef.current) return;
         try {
             const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net";
             const faucet = new Faucet(faucetUrl);
             const wallet = await faucet.createWallet();
-            const chain = await faucet.claimChain(wallet, owner); // This often grants 10 tokens
+            const chain = await faucet.claimChain(wallet, owner);
 
             console.log("Funds requested, chain updated:", chain);
             fetchBalance();
@@ -176,7 +194,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             chainId,
             owner,
             balance,
-            client: clientInstance, // Use state here!
+            client: clientInstance,
             getApplication,
             connect,
             disconnect,

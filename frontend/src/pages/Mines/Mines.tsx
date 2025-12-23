@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Gem, Bomb } from 'lucide-react';
-import { useMinesGame } from '../hooks/useMinesGame';
-import { useLineraWallet } from '../hooks/useLineraWallet';
-import { usePulseToken } from '../hooks/usePulseToken';
+import { useMinesGame } from '../../hooks/useMinesGame';
+import { useLineraWallet } from '../../hooks/useLineraWallet';
+import { usePulseToken } from '../../hooks/usePulseToken';
 
 export const Mines = () => {
     // Game Hooks

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Coins, Zap } from 'lucide-react';
-import { useLineraWallet } from '../hooks/useLineraWallet';
-import { usePulseToken } from '../hooks/usePulseToken';
+import { useLineraWallet } from '../../hooks/useLineraWallet';
+import { usePulseToken } from '../../hooks/usePulseToken';
 
 export default function Faucets() {
     const { balance, owner, requestFaucet } = useLineraWallet();
