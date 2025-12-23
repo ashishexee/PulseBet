@@ -9,6 +9,14 @@ export default defineConfig({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
+    proxy: {
+      '/faucet-proxy': {
+        target: 'https://faucet.testnet-conway.linera.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/faucet-proxy/, ''),
+        secure: false,
+      }
+    }
   },
 
   optimizeDeps: {

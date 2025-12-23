@@ -41,7 +41,6 @@ export default function Faucets() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-                {/* Linera Native Token Faucet */}
                 <div className="bg-gradient-to-br from-[#1a2332] to-[#0f1520] rounded-2xl p-6 border border-[#2a3441] shadow-lg">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-xl">
@@ -74,7 +73,6 @@ export default function Faucets() {
                     </div>
                 </div>
 
-                {/* PulseToken Faucet */}
                 <div className="bg-gradient-to-br from-[#1a2332] to-[#0f1520] rounded-2xl p-6 border border-[#2a3441] shadow-lg">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-purple-500/10 rounded-xl">

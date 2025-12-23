@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
-import { Wallet } from "ethers";
-import { PrivateKey } from "@linera/signer";
+
 import { initialize, Client, Faucet } from "@linera/client";
 
 interface LineraWalletContextType {
@@ -57,7 +56,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
         if (initRef.current) return;
         initRef.current = true;
 
-        setIsConnecting(true);
         try {
             if (!window.crossOriginIsolated) {
                 const errorMsg = "Linera Requirements: App is not Cross-Origin Isolated. Wasm threads will fail.";
@@ -70,55 +68,9 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             setIsReady(true);
             console.log("Linera WASM initialized");
 
-            let mnemonic = localStorage.getItem('linera_mnemonic');
-            if (!mnemonic) {
-                const generated = Wallet.createRandom();
-                const phrase = generated.mnemonic?.phrase;
-                if (!phrase) throw new Error('Failed to generate mnemonic');
-                mnemonic = phrase;
-                localStorage.setItem('linera_mnemonic', mnemonic);
-                console.log("Created new Burner Wallet");
-            } else {
-                console.log("Loaded existing Burner Wallet");
-            }
-
-            const signer = PrivateKey.fromMnemonic(mnemonic);
-            const addr = (signer as any).wallet.address;
-            setOwner(addr);
-            console.log("Signer Address:", addr);
-
-            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net";
-            console.log("Using Faucet:", faucetUrl);
-            const faucet = new Faucet(faucetUrl);
-            console.log("Creating/Resuming Wallet...");
-            const wallet = await faucet.createWallet();
-
-            console.log("Claiming Chain...");
-            const chain = await faucet.claimChain(wallet, addr);
-
-            setChainId(chain);
-            localStorage.setItem("linera_chain_id", chain);
-            console.log("Chain ID:", chain);
-
-            console.log("Initializing Client...");
-            setIsConnected(true);
-            setIsConnecting(false);
-            (async () => {
-                    const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
-                    const nodeUrl = envUrl || "https://testnet-conway.linera.net";
-                    console.log("Using Node URL:", nodeUrl);
-                    const options = { validators: [nodeUrl] };
-                    const newClient = await new Client(wallet, signer, options as any);
-                    clientRef.current = newClient;
-                    setClientInstance(newClient);
-                    console.log("Client Ready!");
-                    fetchBalance();
-            })();
-
         } catch (e: any) {
             console.error("Initialization Failed:", e);
             setError(e.message || "Failed to initialize wallet");
-            setIsConnecting(false);
         }
     };
 
@@ -127,12 +79,64 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     }, []);
 
     const connect = async () => {
-        window.location.reload();
+        setIsConnecting(true);
+        setError(null);
+        try {
+            console.log("Connecting with MetaMask...");
+
+            const { MetaMask } = await import('../utils/metamask');
+            const signer = new MetaMask();
+
+            const addr = await signer.address();
+            console.log("MetaMask Address:", addr);
+            setOwner(addr);
+
+            const defaultProxy = typeof window !== 'undefined' ? window.location.origin + "/faucet-proxy" : "https://faucet.testnet-conway.linera.net";
+            const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || defaultProxy;
+            const faucet = new Faucet(faucetUrl);
+            const wallet = await faucet.createWallet();
+
+            const chain = await faucet.claimChain(wallet, addr);
+            localStorage.setItem("linera_chain_id", chain);
+            console.log("Chain ID:", chain);
+
+            setChainId(chain);
+
+            console.log("Initializing Client...");
+            const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
+            const nodeUrl = envUrl || "https://testnet-conway.linera.net";
+
+            const options = { validators: [nodeUrl] };
+            const newClient = await new Client(wallet, signer, options as any);
+
+            clientRef.current = newClient;
+            setClientInstance(newClient);
+            setIsConnected(true);
+            console.log("Client Ready!");
+
+            (async () => {
+                if (chain && newClient) {
+                    try {
+                        const chainHandle = await newClient.chain(chain);
+                        const bal = await chainHandle.balance();
+                        setBalance(bal?.toString() || "0");
+                        console.log("Initial Balance:", bal);
+                    } catch (e) {
+                        console.warn("Initial Balance Fetch Failed", e);
+                    }
+                }
+            })();
+        } catch (e: any) {
+            console.error("Connection Failed:", e);
+            setError(e.message || "Connection failed");
+        } finally {
+            setIsConnecting(false);
+        }
     };
 
     const disconnect = useCallback(async () => {
         console.log("Resetting Network...");
-        localStorage.clear(); // Clear all local storage to be safe
+        localStorage.clear();
 
         try {
             if (window.indexedDB && window.indexedDB.databases) {
@@ -146,7 +150,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
                             req.onerror = () => reject("Failed to delete " + db.name);
                             req.onblocked = () => {
                                 console.warn("Delete blocked: " + db.name);
-                                resolve(); // Proceed anyway
+                                resolve();
                             };
                         });
                     }
