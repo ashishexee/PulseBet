@@ -1,253 +1,250 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLineraWallet } from './useLineraWallet';
 
-// Core Types based on Contract Service
-export type RoomType = 'Public' | 'Private';
-export type RoomState = 'WAITING' | 'IN_GAME' | 'FINISHED';
-export type CardState = 'HIDDEN' | 'REVEALED' | 'REMOVED';
-export type TurnOutcome = 'Match' | 'NoMatch';
+const MEMORY_GAME_APP_ID = import.meta.env.VITE_MEMORY_GAME_APP_ID;
 
-export interface Card {
-    id: number;
+interface Card {
+    position: number;
     imageId: number;
-    state: CardState;
 }
 
-export interface Player {
-    owner: string;
-    score: number;
-}
-
-export interface TurnInfo {
+interface Game {
     player: string;
-    card1: { id: number; imageId: number };
-    card2: { id: number; imageId: number };
-    outcome: TurnOutcome;
+    stakeAmount: number;
+    turnCount: number;
+    matchedCardsCount: number;
+    matchedCards: number[];
+    firstRevealedCard: number | null;
+    state: 'PLAYING' | 'FINISHED' | 'CLAIMED';
+    payoutMultiplier: number | null;
 }
 
-export interface Room {
-    roomId: string;
-    roomType: RoomType;
-    roomCode?: string;
-    player1: Player;
-    player2?: Player;
-    state: RoomState;
-    cards: Card[];
-    currentTurn: string;
-    lastTurn?: TurnInfo;
+interface CardRevealResponse {
+    imageId: number;
+    isMatch: boolean | null;
+    turnCount: number;
+    matchedCardsCount: number;
+    matchedCards: number[];
+    gameState: 'PLAYING' | 'FINISHED' | 'CLAIMED';
 }
 
 export const useMemoryGame = () => {
-    const { client, chainId, isConnected } = useLineraWallet();
-    const [gameState, setGameState] = useState<Room | null>(null);
-    const [publicRooms, setPublicRooms] = useState<Room[]>([]);
+    const { client, chainId, owner } = useLineraWallet();
+    const [gameState, setGameState] = useState<Game | null>(null);
+    const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(false);
-    const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const executeQuery = useCallback(async (query: string) => {
+        if (!client || !chainId) return null;
 
-    const APP_ID = import.meta.env.VITE_MEMORY_GAME_APP_ID?.trim();
-
-    const executeQuery = useCallback(async (query: string, targetChainId?: string) => {
-        if (!client || !chainId || !APP_ID) return null;
         try {
-            const chain = await client.chain(targetChainId || chainId);
-            const app = await chain.application(APP_ID);
-            const responseJson = await app.query(JSON.stringify({ query }));
-            const response = JSON.parse(responseJson);
-            if (response.errors) {
-                console.error("GraphQL Errors:", response.errors);
-                // Return null on error so we can handle it gracefully in calling functions if needed
-                throw new Error(response.errors[0].message);
-            }
-            return response.data;
-        } catch (e) {
-            console.error("GraphQL Execution Error:", e);
-            throw e;
-        }
-    }, [client, chainId, APP_ID]);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(MEMORY_GAME_APP_ID);
 
-    const fetchRoom = useCallback(async (roomId: string) => {
-        if (!roomId) return;
-        const ROOM_QUERY = `query {
-            room(roomId: "${roomId}") {
-                roomId
-                roomType
-                roomCode
-                player1 { owner score }
-                player2 { owner score }
-                state
-                cards { id imageId state }
-                currentTurn
-                lastTurn {
-                    player
-                    card1 { id imageId }
-                    card2 { id imageId }
-                    outcome
+            const requestBody = JSON.stringify({ query });
+            const responseJson = await app.query(requestBody);
+            const response = JSON.parse(responseJson);
+            return response.data;
+        } catch (err: any) {
+            console.error('Query failed:', err);
+            return null;
+        }
+    }, [client, chainId]);
+
+    // Single fetch operation
+    const fetchGame = useCallback(async (): Promise<boolean> => {
+        if (!owner) return false;
+
+        const query = `{
+      activeGame {
+        player
+        stakeAmount
+        turnCount
+        matchedCardsCount
+        matchedCards
+        firstRevealedCard
+        state
+        payoutMultiplier
+      }
+    }`;
+
+        try {
+            const data = await executeQuery(query);
+            console.log(data);
+            if (data?.activeGame) {
+                setGameState(data.activeGame);
+                return true;
+            } else {
+                setGameState(null);
+                return false;
+            }
+        } catch (error) {
+            console.error('Fetch game error:', error);
+            return false;
+        }
+    }, [executeQuery, owner]);
+
+    // Polling helper for game creation
+    const waitForGameActive = useCallback(async (maxAttempts = 10, delayMs = 1000): Promise<boolean> => {
+        for (let i = 0; i < maxAttempts; i++) {
+            const found = await fetchGame();
+            if (found) return true;
+            await new Promise(r => setTimeout(r, delayMs));
+        }
+        return false;
+    }, [fetchGame]);
+
+    // Fetch cards
+    const fetchCards = useCallback(async () => {
+        if (!owner) return;
+
+        const query = `{
+      cards(player: "${owner}") {
+        position
+        imageId
+      }
+    }`;
+
+        const data = await executeQuery(query);
+        if (data?.cards) {
+            setCards(data.cards);
+        }
+    }, [executeQuery, owner]);
+
+    // Create game
+    const createGame = useCallback(async (stakeAmount: number) => {
+        if (!owner) throw new Error('Wallet not connected');
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const mutation = `mutation {
+        createGame(stakeAmount: ${stakeAmount}, owner: "${owner}")
+      }`;
+
+            console.log('🎮 Creating game with mutation:', mutation);
+            await executeQuery(mutation);
+
+            console.log('⏳ Waiting for game to become active...');
+            const gameFound = await waitForGameActive(10, 1000);
+
+            if (gameFound) {
+                console.log('✅ Successfully loaded game!');
+                await fetchCards();
+            } else {
+                console.error('❌ Game not found after polling');
+                throw new Error('Game created but not visible yet. Please refresh.');
+            }
+        } catch (err: any) {
+            console.error('Create game error:', err);
+            setError(err.message || 'Failed to create game');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [owner, executeQuery, waitForGameActive, fetchCards]);
+
+    // Reveal card
+    const revealCard = useCallback(async (cardId: number): Promise<CardRevealResponse | null> => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const mutation = `mutation {
+        revealCard(cardId: ${cardId})
+      }`;
+            const result = await executeQuery(mutation);
+            if (!result) {
+                throw new Error("Transaction cancelled or failed");
+            }
+            const card = cards.find(c => c.position === cardId);
+            if (!card) throw new Error('Card data not found');
+
+            let isMatch = null;
+            let firstCardId = gameState?.firstRevealedCard;
+
+            if (firstCardId !== null && firstCardId !== undefined) {
+                // This is the second card
+                const firstCard = cards.find(c => c.position === firstCardId);
+                if (firstCard) {
+                    isMatch = firstCard.imageId === card.imageId;
                 }
             }
-        }`;
-        try {
-            setError(null); // Clear previous errors on retry
-            const data = await executeQuery(ROOM_QUERY, roomId);
-            if (data?.room) {
-                setGameState(data.room);
-                setActiveRoomId(roomId);
-            }
-        } catch (e: any) {
-            console.warn("Retrying fetch room...", e);
-            const msg = e.message || "Connection Failed";
-            if (msg.includes("Blobs not found")) {
-                setError("Syncing Network... (Waiting for Bytecode)");
-            } else if (msg.includes("Events not found")) {
-                setError("Syncing Network... (Waiting for Events)");
-            } else {
-                setError(msg);
-            }
+
+            // Trigger fetch in background
+            fetchGame();
+
+            return {
+                imageId: card.imageId,
+                isMatch: isMatch,
+                turnCount: gameState?.turnCount || 0,
+                matchedCardsCount: gameState?.matchedCardsCount || 0,
+                matchedCards: gameState?.matchedCards || [],
+                gameState: gameState?.state || 'PLAYING'
+            };
+        } catch (err: any) {
+            console.error('Reveal card error:', err);
+            setError(err.message || 'Failed to reveal card');
+            throw err;
+        } finally {
+            setLoading(false);
         }
-    }, [executeQuery]);
+    }, [executeQuery, fetchGame, gameState, cards]);
 
-    const refreshState = useCallback(async () => {
-        if (!isConnected || !chainId) return;
-
-        // 1. Get the Creation Chain ID (Lobby Chain)
-        const INFO_QUERY = `query { creationChainId }`;
-        let lobbyChainId = chainId;
+    // Claim payout
+    const claimPayout = useCallback(async () => {
+        setLoading(true);
+        setError(null);
 
         try {
-            const info = await executeQuery(INFO_QUERY);
-            if (info?.creationChainId) {
-                lobbyChainId = info.creationChainId;
-            }
-        } catch (e) {
-            console.warn("Could not fetch creationChainId, defaulting to local chain", e);
+            const mutation = `mutation {
+        claimPayout
+      }`;
+
+            await executeQuery(mutation);
+            await fetchGame();
+        } catch (err: any) {
+            console.error('Claim payout error:', err);
+            setError(err.message || 'Failed to claim payout');
+            throw err;
+        } finally {
+            setLoading(false);
         }
+    }, [executeQuery, fetchGame]);
 
-        // 2. Query Public Rooms and Active Game
-        const LOBBY_QUERY = `query {
-            publicRooms(limit: 10) {
-                roomId
-                roomType
-                player1 { owner score }
-                state
-            }
-            activeGame
-        }`;
+    // Calculate potential payout
+    const calculatePotentialPayout = useCallback((turnCount: number, stakeAmount: number): number => {
+        let multiplier = 0;
+        if (turnCount === 11) multiplier = 20;
+        else if (turnCount >= 12 && turnCount <= 14) multiplier = 5;
+        else if (turnCount >= 15 && turnCount <= 17) multiplier = 3;
+        else if (turnCount >= 18 && turnCount <= 20) multiplier = 1.5;
 
-        try {
-            const data = await executeQuery(LOBBY_QUERY, lobbyChainId);
-            if (data?.publicRooms) {
-                setPublicRooms(data.publicRooms);
-            }
-            if (data?.activeGame) {
-                console.log("Found active game:", data.activeGame);
-                setActiveRoomId(data.activeGame);
-                // Immediately fetch that room to populate gameState
-                await fetchRoom(data.activeGame);
-            }
-        } catch (e) {
-            // ignore
-        }
+        return stakeAmount * multiplier;
+    }, []);
 
-    }, [isConnected, chainId, executeQuery, fetchRoom]);
-
-    // Initial load public rooms
     useEffect(() => {
-        refreshState();
-    }, [refreshState]);
+        if (owner) {
+            fetchGame();
+            fetchCards();
 
-    const [error, setError] = useState<string | null>(null);
+            const interval = setInterval(() => {
+                fetchGame();
+            }, 3000);
 
-    const createRoom = async (type: RoomType, code?: string) => {
-        setLoading(true);
-        const codeArg = code ? `"${code}"` : "null";
-        const mutation = `mutation {
-                createRoom(roomType: ${type.toUpperCase()}, roomCode: ${codeArg})
-            }`;
-        try {
-            await executeQuery(mutation);
-            if (chainId) {
-                setActiveRoomId(chainId); // Optimistically set active room
-                await fetchRoom(chainId);
-            }
-        } finally {
-            setLoading(false);
+            return () => clearInterval(interval);
         }
-    };
-
-    const joinRoom = async (roomId: string, code?: string) => {
-        setLoading(true);
-        const codeArg = code ? `"${code}"` : "null";
-        const mutation = `mutation {
-                joinRoom(roomId: "${roomId}", roomCode: ${codeArg})
-            }`;
-        try {
-            await executeQuery(mutation);
-            setActiveRoomId(roomId); // Optimistically set active room so polling starts
-            await fetchRoom(roomId);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const playTurn = async (roomId: string, cardIds: [number, number]) => {
-        const mutation = `mutation {
-                playTurn(roomId: "${roomId}", cardIds: [${cardIds[0]}, ${cardIds[1]}])
-            }`;
-        try {
-            await executeQuery(mutation);
-            await fetchRoom(roomId);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    const startGame = async (roomId: string) => {
-        setLoading(true);
-        const mutation = `mutation {
-            startGame(roomId: "${roomId}")
-        }`;
-        try {
-            await executeQuery(mutation);
-            await fetchRoom(roomId);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const endGame = async (roomId: string) => {
-        setLoading(true);
-        const mutation = `mutation {
-                endRoom(roomId: "${roomId}")
-            }`;
-        try {
-            await executeQuery(mutation);
-            setGameState(null);
-            setActiveRoomId(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Polling active game
-    useEffect(() => {
-        if (!activeRoomId) return;
-        const interval = setInterval(() => {
-            fetchRoom(activeRoomId);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [activeRoomId, fetchRoom]);
+    }, [owner, fetchGame, fetchCards]);
 
     return {
         gameState,
-        publicRooms,
+        cards,
         loading,
-        createRoom,
-        joinRoom,
-        playTurn,
-        startGame,
-        endGame,
-        refreshLobby: refreshState,
-        setGameId: setActiveRoomId,
-        activeRoomId,
-        error
+        error,
+        createGame,
+        revealCard,
+        claimPayout,
+        calculatePotentialPayout,
     };
 };

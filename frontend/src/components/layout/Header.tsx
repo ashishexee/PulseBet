@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Hammer, Wallet, LogOut } from "lucide-react";
+import { Hammer, Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
+import { useState } from "react";
 
 interface HeaderProps {
     toggleSidebar: () => void;
@@ -11,6 +12,23 @@ export function Header({ toggleSidebar }: HeaderProps) {
     const { isConnected, connect, disconnect, chainId, balance, owner } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
+    const [copiedAddress, setCopiedAddress] = useState(false);
+    const [copiedChainId, setCopiedChainId] = useState(false);
+
+    const copyToClipboard = async (text: string, type: 'address' | 'chainId') => {
+        try {
+            await navigator.clipboard.writeText(text);
+            if (type === 'address') {
+                setCopiedAddress(true);
+                setTimeout(() => setCopiedAddress(false), 2000);
+            } else {
+                setCopiedChainId(true);
+                setTimeout(() => setCopiedChainId(false), 2000);
+            }
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
 
     return (
         <header className="fixed top-0 left-0 right-0 h-16 bg-[#0F172A] border-b border-[#1E293B] flex items-center justify-between px-6 z-50">
@@ -29,15 +47,41 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col items-end mr-4">
                             <span className="text-xs text-gray-400">Address</span>
-                            <span className="text-sm font-mono text-green-400 max-w-[100px] truncate" title={owner || ""}>
-                                {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : "..."}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono text-green-400 max-w-[100px] truncate" title={owner || ""}>
+                                    {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : "..."}
+                                </span>
+                                <button
+                                    onClick={() => owner && copyToClipboard(owner, 'address')}
+                                    className="text-gray-400 hover:text-green-400 transition-colors"
+                                    title="Copy address"
+                                >
+                                    {copiedAddress ? (
+                                        <Check className="w-3 h-3 text-green-400" />
+                                    ) : (
+                                        <Copy className="w-3 h-3" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-col items-end mr-4">
                             <span className="text-xs text-gray-400">Chain ID</span>
-                            <span className="text-sm font-mono text-blue-400 max-w-[100px] truncate" title={chainId || ""}>
-                                {chainId ? `${chainId.slice(0, 6)}...${chainId.slice(-4)}` : "Loading..."}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-mono text-blue-400 max-w-[100px] truncate" title={chainId || ""}>
+                                    {chainId ? `${chainId.slice(0, 6)}...${chainId.slice(-4)}` : "Loading..."}
+                                </span>
+                                <button
+                                    onClick={() => chainId && copyToClipboard(chainId, 'chainId')}
+                                    className="text-gray-400 hover:text-blue-400 transition-colors"
+                                    title="Copy chain ID"
+                                >
+                                    {copiedChainId ? (
+                                        <Check className="w-3 h-3 text-blue-400" />
+                                    ) : (
+                                        <Copy className="w-3 h-3" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-col items-end mr-4">
                             <span className="text-xs text-gray-400">Balance</span>

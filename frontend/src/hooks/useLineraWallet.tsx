@@ -128,6 +128,24 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             })();
         } catch (e: any) {
             console.error("Connection Failed:", e);
+
+            // Auto-Recovery for Fatal Sync Errors
+            const fatalErrors = [
+                "out of order",
+                "Blob not found",
+                "Worker operation failed",
+                "Missing dependency"
+            ];
+
+            const isFatal = fatalErrors.some(err => e.message?.includes(err) || e.toString().includes(err));
+
+            if (isFatal) {
+                console.error("FATAL SYNC ERROR DETECTED. INITIATING AUTO-RESET...");
+                setError("Critical Sync Error Detected. Resetting Network...");
+                await disconnect(); // This clears IndexedDB and reloads
+                return;
+            }
+
             setError(e.message || "Connection failed");
         } finally {
             setIsConnecting(false);
