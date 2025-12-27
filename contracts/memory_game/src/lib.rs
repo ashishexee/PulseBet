@@ -1,90 +1,59 @@
-use async_graphql::Enum;
+use async_graphql::{Request, Response};
 use linera_sdk::{
     abi::{ContractAbi, ServiceAbi},
-    linera_base_types::{AccountOwner, ChainId},
+    linera_base_types::ApplicationId,
 };
 use serde::{Deserialize, Serialize};
 
 pub struct MemoryGameAbi;
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct MemoryGameParameters {
-    pub creation_chain_id: ChainId,
+pub struct InstantiationArgument {
+    pub pulse_token_id: ApplicationId,
 }
 
 impl ContractAbi for MemoryGameAbi {
     type Operation = Operation;
-    type Response = ();
+    type Response = OperationResponse;
 }
 
 impl ServiceAbi for MemoryGameAbi {
-    type Query = async_graphql::Request;
-    type QueryResponse = async_graphql::Response;
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Copy, Enum)]
-pub enum RoomType {
-    Public,
-    Private,
+    type Query = Request;
+    type QueryResponse = Response;
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum Operation {
-    CreateRoom {
-        room_type: RoomType,
-        room_code: Option<String>,
+    CreateGame {
+        stake_amount: u64, // Amount in tokens
+        owner: String,     // Player address
     },
-    JoinRoom {
-        room_id: ChainId,
-        room_code: Option<String>,
+    RevealCard {
+        card_id: u8,
     },
-    PlayTurn {
-        room_id: ChainId,
-        card_ids: [u8; 2],
+    ClaimPayout,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum OperationResponse {
+    GameCreated {
+        cards_count: usize,
     },
-    EndGame {
-        room_id: ChainId,
+    CardRevealed {
+        image_id: u8,
+        is_match: Option<bool>, // None if first card, Some(true/false) if second card
+        turn_count: u8,
+        matched_cards_count: usize,
+        game_state: GameState,
     },
-    StartGame {
-        room_id: ChainId,
+    PayoutClaimed {
+        payout_amount: u64,
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Copy, Enum)]
-pub enum TurnOutcome {
-    Match,
-    NoMatch,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub enum Message {
-    RegisterRoom {
-        room_id: ChainId,
-        owner: AccountOwner,
-    },
-    UnregisterRoom {
-        room_id: ChainId,
-    },
-    RequestJoin {
-        room_id: ChainId,
-        player_id: AccountOwner,
-        room_code: Option<String>,
-        source_chain_id: ChainId,
-    },
-    JoinAccepted {
-        room_id: ChainId,
-    },
-    SubmitTurn {
-        room_id: ChainId,
-        player_id: AccountOwner,
-        card_ids: [u8; 2],
-    },
-    StartGame {
-        room_id: ChainId,
-    },
-    EndGame {
-        room_id: ChainId,
-    },
-    GameStarted {
-        room_id: ChainId,
-    },
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, Copy)]
+pub enum GameState {
+    Playing,
+    Finished,
+    Claimed,
 }

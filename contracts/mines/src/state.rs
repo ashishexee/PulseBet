@@ -14,11 +14,11 @@ pub struct MinesState {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Game {
-    pub owner: String, // Player's address for token transfers
+    pub owner: String, 
     pub mines_count: u8,
     pub bet_amount: u64,
     pub revealed_tiles: Vec<u8>,
     pub mine_indices: Vec<u8>,
     pub result: GameResult,
-    pub current_multiplier: u64, // Stored as percentage (100 = 1.0x, 150 = 1.5x)
+    pub current_multiplier: u64, 
 }

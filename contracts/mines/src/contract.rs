@@ -66,11 +66,9 @@ const PULSE_TOKEN_APP_ID: &str = "8e7498a4564d33c50bc4a3053eba7b51a4f5e7085111db
 
 impl MinesContract {
     async fn execute_bet(&mut self, amount: u64, mines_count: u8, owner: String) {
-        // Validation
         assert!(mines_count >= 1 && mines_count <= 24, "Invalid mines count");
         assert!(amount > 0, "Bet amount must be positive");
 
-        // Check if game already active
         let active_game = self.state.active_game.get();
         if let Some(game) = active_game {
             assert!(game.result != GameResult::Active, "Game already active");
@@ -93,18 +91,16 @@ impl MinesContract {
         self.runtime
             .call_application(true, token_app_id, &debit_op);
 
-        // Generate Mines (Pseudo-RNG)
         let mine_indices = self.generate_mines(mines_count);
 
-        // Create new game with owner
-        let new_game = Game {
+let new_game = Game {
             owner: owner.clone(),
             mines_count,
             bet_amount: amount,
             revealed_tiles: Vec::new(),
             mine_indices,
             result: GameResult::Active,
-            current_multiplier: 100, // 100 = 1.0x multiplier
+            current_multiplier: 100, 
         };
 
         self.state.active_game.set(Some(new_game));
@@ -117,40 +113,33 @@ impl MinesContract {
         assert!(matches!(game.result, GameResult::Active), "Game is over");
         assert!(!game.revealed_tiles.contains(&tile_id), "Tile already revealed");
 
-        // check mine
         if game.mine_indices.contains(&tile_id) {
             game.result = GameResult::Lost;
             game.revealed_tiles.push(tile_id);
             self.state.active_game.set(Some(game));
-            // Lost - tokens already debited, no credit back
         } else {
             game.revealed_tiles.push(tile_id);
             
-            // Calculate new multiplier ON-CHAIN (stored as percentage, 100 = 1.0x)
             let hits = game.revealed_tiles.len() as u64;
-            // Base and step stored as percentage points
             let (base, step) = match game.mines_count {
-                3 => (110, 20),   // 1.1x base, +0.2x per reveal
-                5 => (140, 30),   // 1.4x base, +0.3x per reveal
-                7 => (140, 50),   // 1.4x base, +0.5x per reveal
-                _ => (100, 10),   // 1.0x base, +0.1x per reveal
+                3 => (110, 20),   
+                5 => (140, 30),   
+                7 => (140, 50),   
+                _ => (100, 10),   
             };
             
             let new_mult = if hits == 0 { 
-                100  // 1.0x
+                100  
             } else {
                 base + ((hits - 1) * step)
             };
             
             game.current_multiplier = new_mult;
 
-            // Check Win Condition (All safe tiles revealed)
             let safe_tiles = 25 - game.mines_count;
             if game.revealed_tiles.len() as u8 == safe_tiles {
                 game.result = GameResult::Won;
                 
-                // Credit tokens on Win (Payout)
-                // payout = bet * multiplier / 100
                 let payout = (game.bet_amount * game.current_multiplier) / 100;
                 
                 let token_app_id = match self.state.pulse_token_id.get() {
@@ -178,7 +167,7 @@ impl MinesContract {
         let mut game = self.state.active_game.get().clone().expect("No active game");
         assert!(matches!(game.result, GameResult::Active), "Game is over");
 
-        let payout = (game.bet_amount * game.current_multiplier) / 100; // Multiplier is percentage
+        let payout = (game.bet_amount * game.current_multiplier) / 100;
         
         let token_app_id = match self.state.pulse_token_id.get() {
             Some(id) => *id,

@@ -12,6 +12,7 @@ serde_json = { version = "1.0" }
 linera-views = "0.15.7"
 linera-base = "0.15.7"
 bcs = "0.1.3"
+pulse_token = { path = "../pulse_token" }
 
 [dev-dependencies]
 linera-sdk = { version = "0.15.7", features = ["test", "wasmer"] }
