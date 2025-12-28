@@ -58,43 +58,96 @@ export const StakeScreen = ({ onCreateGame, loading }: StakeScreenProps) => {
                         <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
                         <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-                            <div className="space-y-4">
-                                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-                                    Injection Amount
-                                </label>
-                                <div className="relative group">
-                                    <input
-                                        type="number"
-                                        value={stakeAmount}
-                                        onChange={(e) => setStakeAmount(e.target.value)}
-                                        min="1"
-                                        className="w-full bg-zinc-900/50 text-4xl font-light text-white border-b-2 border-zinc-800 focus:border-white outline-none py-4 transition-all placeholder-zinc-800 font-mono"
-                                        placeholder="0"
-                                        disabled={loading}
-                                    />
-                                    <span className="absolute right-0 top-1/2 -translate-y-1/2 text-sm text-zinc-600 font-medium">
-                                        PT
-                                    </span>
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                                        Injection Amount
+                                    </label>
+                                    <div className="relative group">
+                                        <input
+                                            type="number"
+                                            value={stakeAmount}
+                                            onChange={(e) => setStakeAmount(e.target.value)}
+                                            min="1"
+                                            className="w-full bg-zinc-900 text-5xl font-medium text-white border-2 border-zinc-800 focus:border-white focus:ring-4 focus:ring-zinc-800 outline-none py-6 px-4 rounded-xl transition-all placeholder-zinc-700 font-mono shadow-inner"
+                                            placeholder="0"
+                                            disabled={loading}
+                                        />
+                                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-lg font-bold text-zinc-500">
+                                            PT
+                                        </span>
+                                    </div>
+
+                                    {/* Dynamic Yield Calculator */}
+                                    {parseInt(stakeAmount) > 0 && (
+                                        <div className="flex items-center justify-between px-2 text-sm animate-fade-in">
+                                            <span className="text-zinc-500">Potential Return (20x)</span>
+                                            <span className="font-mono font-bold text-green-400">
+                                                {(parseInt(stakeAmount) * 20).toLocaleString()} PT
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-500">Yield Structure</span>
-                                    <span className="text-white font-mono opacity-50">v1.0</span>
+                            <div className="space-y-4 pt-6 border-t border-zinc-900">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Prizepool Structure</span>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
-                                        <span className="text-zinc-400">Perfect Run (6 Turns)</span>
-                                        <span className="font-mono text-white">20x</span>
+
+                                <div className="space-y-3">
+                                    {/* Perfect Run */}
+                                    <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-r from-zinc-900 to-zinc-900 border border-emerald-500/30 group hover:border-emerald-500/50 transition-all">
+                                        <div className="absolute top-0 right-0 p-8 bg-emerald-500/10 blur-[30px] rounded-full"></div>
+                                        <div className="flex justify-between items-center relative z-10">
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-bold text-lg">Perfect Run</span>
+                                                <span className="text-zinc-500 text-xs uppercase tracking-wider font-bold">6 Turns</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-mono text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">
+                                                    20x
+                                                </div>
+                                                {parseInt(stakeAmount) > 0 && (
+                                                    <div className="text-emerald-500 font-mono text-xs font-bold">
+                                                        = {(parseInt(stakeAmount) * 20).toLocaleString()} PT
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
-                                        <span className="text-zinc-500">Optimal (7-8 Turns)</span>
-                                        <span className="font-mono text-zinc-300">5x</span>
+
+                                    {/* Optimal */}
+                                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                            <span className="text-zinc-300 font-bold">Optimal</span>
+                                            <span className="text-zinc-600 text-xs uppercase tracking-wider font-bold">7-8 Turns</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-mono text-xl font-bold text-white">5x</div>
+                                            {parseInt(stakeAmount) > 0 && (
+                                                <div className="text-zinc-500 font-mono text-xs">
+                                                    = {(parseInt(stakeAmount) * 5).toLocaleString()} PT
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
-                                        <span className="text-zinc-600">Standard (9-10 Turns)</span>
-                                        <span className="font-mono text-zinc-500">3x</span>
+
+                                    {/* Standard */}
+                                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/50 flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                            <span className="text-zinc-400 font-medium">Standard</span>
+                                            <span className="text-zinc-700 text-xs uppercase tracking-wider font-bold">9-10 Turns</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-mono text-xl font-bold text-zinc-400">3x</div>
+                                            {parseInt(stakeAmount) > 0 && (
+                                                <div className="text-zinc-600 font-mono text-xs">
+                                                    = {(parseInt(stakeAmount) * 3).toLocaleString()} PT
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

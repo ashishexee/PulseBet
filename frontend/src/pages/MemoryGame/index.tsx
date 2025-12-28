@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useMemoryGame } from '../../hooks/useMemoryGame';
 import { StakeScreen } from './StakeScreen';
 import { GameBoard } from './GameBoard';
@@ -16,9 +17,19 @@ export const MemoryGame = () => {
         resetGame,
     } = useMemoryGame();
 
+    const [gameActiveInSession, setGameActiveInSession] = useState(false);
+
+    // Track if a game has been physically played in this session to show results
+    useEffect(() => {
+        if (gameState?.state === 'PLAYING') {
+            setGameActiveInSession(true);
+        }
+    }, [gameState?.state]);
+
     const handleCreateGame = async (stake: number) => {
         try {
             await createGame(stake);
+            setGameActiveInSession(true); // Manually set to true so we see the result when it finishes
         } catch (err) {
             console.error('Failed to create game:', err);
         }
@@ -26,9 +37,16 @@ export const MemoryGame = () => {
 
     const handlePlayAgain = () => {
         resetGame();
+        setGameActiveInSession(false);
     };
 
     if (!gameState) {
+        return <StakeScreen onCreateGame={handleCreateGame} loading={loading} />;
+    }
+
+    // If game is FINISHED but we haven't played in this session (e.g. fresh load), show Stake Screen (New Game)
+    // Only show Result Screen if we actually played through to the finish
+    if ((gameState.state === 'FINISHED' || gameState.state === 'CLAIMED') && !gameActiveInSession) {
         return <StakeScreen onCreateGame={handleCreateGame} loading={loading} />;
     }
 
