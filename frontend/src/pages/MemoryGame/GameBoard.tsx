@@ -21,13 +21,12 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
     const [matchedCards, setMatchedCards] = useState<Set<number>>(new Set());
     const [firstCard, setFirstCard] = useState<number | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isMatchAnimation, setIsMatchAnimation] = useState(false);
 
-    // Sync state from backend
     useEffect(() => {
         const newRevealed = new Map<number, number>();
         const newMatched = new Set<number>();
-
-        // Sync matched cards
+        if (isMatchAnimation) return;
         if (gameState.matchedCards) {
             gameState.matchedCards.forEach(pos => {
                 newMatched.add(pos);
@@ -46,32 +45,27 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
                 newRevealed.set(gameState.firstRevealedCard, card.imageId);
             }
         } else {
-            setFirstCard(null);
+            setFirstCard(null); ``
         }
 
         setMatchedCards(newMatched);
         setRevealedCards(newRevealed);
-    }, [gameState.matchedCards, gameState.firstRevealedCard, cards]);
+    }, [gameState.matchedCards, gameState.firstRevealedCard, cards, isMatchAnimation]);
 
     const handleCardClick = async (position: number) => {
-        if (isProcessing || matchedCards.has(position) || firstCard === position) return;
-
+        if (isProcessing || isMatchAnimation || matchedCards.has(position) || firstCard === position) return;
         setIsProcessing(true);
-
         try {
             const response = await onRevealCard(position);
-
             if (response) {
-                // Reveal the card
+                if (response.isMatch == false) {
+                    setIsMatchAnimation(true);
+                }
                 setRevealedCards(prev => new Map(prev).set(position, response.imageId));
-
                 if (response.isMatch === null) {
-                    // First card of turn
                     setFirstCard(position);
                 } else {
-                    // Second card of turn
                     if (response.isMatch) {
-                        // Match found!
                         setTimeout(() => {
                             setMatchedCards(prev => {
                                 const newSet = new Set(prev);
@@ -82,7 +76,6 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
                             setFirstCard(null);
                         }, 1000);
                     } else {
-                        // No match
                         setTimeout(() => {
                             setRevealedCards(prev => {
                                 const newMap = new Map(prev);
@@ -91,6 +84,7 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
                                 return newMap;
                             });
                             setFirstCard(null);
+                            setIsMatchAnimation(false);
                         }, 2000);
                     }
                 }
@@ -169,7 +163,6 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
                         </div>
                     </div>
 
-                    {/* Warning Message */}
                     {gameState.turnCount >= 10 && gameState.state === 'PLAYING' && (
                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-start gap-3 animate-pulse">
                             <Target className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -180,12 +173,8 @@ export const GameBoard = ({ cards, gameState, onRevealCard, loading }: GameBoard
                         </div>
                     )}
                 </div>
-
-                {/* Game Grid Container */}
                 <div className="flex-1 bg-[#0f212e] rounded-2xl p-6 md:p-8 flex items-center justify-center border border-[#2f4553]/50 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden min-h-[500px]">
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-
-                    {/* Grid */}
                     <div className="grid grid-cols-4 gap-4 w-full max-w-[480px] aspect-[4/3] relative z-10">
                         {[...Array(12)].map((_, idx) => {
                             const card = cards.find(c => c.position === idx);

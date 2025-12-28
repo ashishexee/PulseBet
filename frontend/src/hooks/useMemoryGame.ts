@@ -16,7 +16,7 @@ interface Game {
     matchedCards: number[];
     firstRevealedCard: number | null;
     state: 'PLAYING' | 'FINISHED' | 'CLAIMED';
-    payoutMultiplier: number | null;
+    potentialPayout: number;
 }
 
 interface CardRevealResponse {
@@ -50,8 +50,6 @@ export const useMemoryGame = () => {
             return null;
         }
     }, [client, chainId]);
-
-    // Single fetch operation
     const fetchGame = useCallback(async (): Promise<boolean> => {
         if (!owner) return false;
 
@@ -64,7 +62,7 @@ export const useMemoryGame = () => {
         matchedCards
         firstRevealedCard
         state
-        payoutMultiplier
+        potentialPayout
       }
     }`;
 
@@ -84,7 +82,6 @@ export const useMemoryGame = () => {
         }
     }, [executeQuery, owner]);
 
-    // Polling helper for game creation
     const waitForGameActive = useCallback(async (maxAttempts = 10, delayMs = 1000): Promise<boolean> => {
         for (let i = 0; i < maxAttempts; i++) {
             const found = await fetchGame();
@@ -93,8 +90,6 @@ export const useMemoryGame = () => {
         }
         return false;
     }, [fetchGame]);
-
-    // Fetch cards
     const fetchCards = useCallback(async () => {
         if (!owner) return;
 
@@ -111,7 +106,6 @@ export const useMemoryGame = () => {
         }
     }, [executeQuery, owner]);
 
-    // Create game
     const createGame = useCallback(async (stakeAmount: number) => {
         if (!owner) throw new Error('Wallet not connected');
 
@@ -144,8 +138,6 @@ export const useMemoryGame = () => {
             setLoading(false);
         }
     }, [owner, executeQuery, waitForGameActive, fetchCards]);
-
-    // Reveal card
     const revealCard = useCallback(async (cardId: number): Promise<CardRevealResponse | null> => {
         setLoading(true);
         setError(null);
@@ -172,7 +164,6 @@ export const useMemoryGame = () => {
                 }
             }
 
-            // Trigger fetch in background
             fetchGame();
 
             return {
@@ -192,7 +183,6 @@ export const useMemoryGame = () => {
         }
     }, [executeQuery, fetchGame, gameState, cards]);
 
-    // Claim payout
     const claimPayout = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -216,10 +206,10 @@ export const useMemoryGame = () => {
     // Calculate potential payout
     const calculatePotentialPayout = useCallback((turnCount: number, stakeAmount: number): number => {
         let multiplier = 0;
-        if (turnCount === 11) multiplier = 20;
-        else if (turnCount >= 12 && turnCount <= 14) multiplier = 5;
-        else if (turnCount >= 15 && turnCount <= 17) multiplier = 3;
-        else if (turnCount >= 18 && turnCount <= 20) multiplier = 1.5;
+        if (turnCount === 6) multiplier = 20;
+        else if (turnCount >= 7 && turnCount <= 8) multiplier = 5;
+        else if (turnCount >= 9 && turnCount <= 10) multiplier = 3;
+        else if (turnCount >= 11 && turnCount <= 12) multiplier = 1.5;
 
         return stakeAmount * multiplier;
     }, []);

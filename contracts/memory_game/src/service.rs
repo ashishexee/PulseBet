@@ -125,7 +125,7 @@ struct GameResponse {
     matched_cards: Vec<u32>,
     first_revealed_card: Option<u32>,
     state: String,
-    payout_multiplier: Option<f64>,
+    potential_payout: u64,
 }
 
 #[Object]
@@ -158,8 +158,8 @@ impl GameResponse {
         self.state.clone()
     }
 
-    async fn payout_multiplier(&self) -> Option<f64> {
-        self.payout_multiplier
+    async fn potential_payout(&self) -> u64 {
+        self.potential_payout
     }
 }
 
@@ -177,8 +177,18 @@ impl From<Game> for GameResponse {
                 GameState::Finished => "FINISHED".to_string(),
                 GameState::Claimed => "CLAIMED".to_string(),
             },
-            payout_multiplier: game.payout_multiplier,
+            potential_payout: calculate_potential_payout(game.stake_amount, game.turn_count),
         }
+    }
+}
+
+fn calculate_potential_payout(stake_amount: u64, turn_count: u8) -> u64 {
+    match turn_count {
+        6 => stake_amount * 20,
+        7..=8 => stake_amount * 5,
+        9..=10 => stake_amount * 3,
+        11..=12 => stake_amount * 3 / 2,
+        _ => 0,
     }
 }
 

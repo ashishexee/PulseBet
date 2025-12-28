@@ -15,14 +15,13 @@ pub struct MemoryGameState {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Game {
-    pub owner: String,    
-    pub stake_amount: u64, 
+    pub owner: String,
+    pub stake_amount: u64,
     pub cards: Vec<Card>,
     pub matched_cards: Vec<u8>,
     pub first_revealed_card: Option<u8>,
     pub turn_count: u8,
     pub state: GameState,
-    pub payout_multiplier: Option<f64>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

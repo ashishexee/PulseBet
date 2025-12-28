@@ -73,8 +73,6 @@ impl MemoryGameContract {
         assert!(stake_amount > 0, "Stake amount must be positive");
 
         let account_owner = AccountOwner::from_str(&owner).expect("Invalid owner address");
-
-        // Check no active game exists (Single Game Mode)
         let existing_game = self.state.active_game.get();
         if let Some(game) = existing_game {
              assert!(game.state != GameState::Playing, "Game already active. Finish or forfeit current game first.");
@@ -107,7 +105,6 @@ impl MemoryGameContract {
             matched_cards: Vec::new(),
             first_revealed_card: None,
             state: GameState::Playing,
-            payout_multiplier: None,
         };
 
         self.state.active_game.set(Some(game));
@@ -159,8 +156,6 @@ impl MemoryGameContract {
                 // Check win/loss conditions
                 if game.matched_cards.len() == 12 {
                     game.state = GameState::Finished;
-                    let multiplier = Self::calculate_multiplier(game.turn_count);
-                    game.payout_multiplier = Some(multiplier);
                 }
             }
         }
@@ -181,8 +176,7 @@ impl MemoryGameContract {
         
         assert!(game.state == GameState::Finished, "Game not finished");
         
-        let multiplier = game.payout_multiplier.expect("Multiplier not calculated");
-        let payout = (game.stake_amount as f64 * multiplier) as u64;
+        let payout = Self::calculate_payout_amount(game.stake_amount, game.turn_count);
 
         if payout > 0 {
             const PULSE_TOKEN_APP_ID: &str = "8e7498a4564d33c50bc4a3053eba7b51a4f5e7085111dbcc7cd3efe6072a7961";
@@ -209,13 +203,13 @@ impl MemoryGameContract {
         }
     }
 
-    fn calculate_multiplier(turn_count: u8) -> f64 {
+    fn calculate_payout_amount(stake_amount: u64, turn_count: u8) -> u64 {
         match turn_count {
-            6 => 20.0,
-            7..=8 => 5.0,
-            9..=10 => 3.0,
-            11..=12 => 1.5,
-            _ => 0.0,
+            6 => stake_amount * 20,
+            7..=8 => stake_amount * 5,
+            9..=10 => stake_amount * 3,
+            11..=12 => stake_amount * 3 / 2,
+            _ => 0,
         }
     }
 
