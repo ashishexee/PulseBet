@@ -13,6 +13,7 @@ export const MemoryGame = () => {
         createGame,
         revealCard,
         claimPayout,
+        resetGame,
     } = useMemoryGame();
 
     const handleCreateGame = async (stake: number) => {
@@ -24,15 +25,13 @@ export const MemoryGame = () => {
     };
 
     const handlePlayAgain = () => {
-        window.location.reload();
+        resetGame();
     };
 
-    // No active game - show stake screen
     if (!gameState) {
         return <StakeScreen onCreateGame={handleCreateGame} loading={loading} />;
     }
 
-    // Game finished - show result screen
     if (gameState.state === 'FINISHED' || gameState.state === 'CLAIMED') {
         return (
             <ResultScreen

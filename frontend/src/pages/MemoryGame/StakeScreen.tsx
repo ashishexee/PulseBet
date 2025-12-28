@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Coins } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface StakeScreenProps {
     onCreateGame: (stake: number) => Promise<void>;
@@ -17,111 +17,102 @@ export const StakeScreen = ({ onCreateGame, loading }: StakeScreenProps) => {
         }
     };
 
-
-
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#1a2c38] p-4 font-sans antialiased text-white animate-fade-in">
-            <div className="max-w-[1000px] w-full flex flex-col items-center gap-8">
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white font-sans antialiased selection:bg-white selection:text-black">
+            {/* Subtle background noise/grid */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
 
-                {/* Header */}
-                <div className="text-center space-y-2">
-                    <h1 className="text-4xl md:text-5xl font-black text-white drop-shadow-lg tracking-tight">
-                        MEMORY <span className="text-[var(--primary-blue)]">MATCH</span>
-                    </h1>
-                    <p className="text-[#b1bad3] font-medium text-lg">
-                        Find the pairs. Beat the clock.
-                    </p>
+            <div className="max-w-4xl w-full flex flex-col md:flex-row gap-12 p-8 md:p-12 z-10">
+                {/* Left: Branding & Info */}
+                <div className="flex-1 flex flex-col justify-center space-y-8">
+                    <div className="space-y-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                            <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Live Testnet</span>
+                        </div>
+                        <h1 className="text-6xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500">
+                            Memory<br />Protocol.
+                        </h1>
+                        <p className="text-lg text-zinc-500 max-w-sm leading-relaxed">
+                            A decentralized test of cognitive retention.
+                            Match pairs. Minimize entropy. Maximise yield.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-xl border border-zinc-900 bg-zinc-900/20 backdrop-blur-sm">
+                            <div className="text-2xl font-semibold">6</div>
+                            <div className="text-xs text-zinc-500 uppercase tracking-wider mt-1">Pairs</div>
+                        </div>
+                        <div className="p-4 rounded-xl border border-zinc-900 bg-zinc-900/20 backdrop-blur-sm">
+                            <div className="text-2xl font-semibold">20x</div>
+                            <div className="text-xs text-zinc-500 uppercase tracking-wider mt-1">Max Yield</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-8 w-full justify-center items-stretch">
+                {/* Right: Interaction */}
+                <div className="w-full md:w-[400px]">
+                    <div className="bg-black rounded-3xl p-8 border border-zinc-800 shadow-2xl shadow-zinc-950/50 relative overflow-hidden">
+                        {/* Gradient Border Hint */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
-                    {/* Control Panel (Betting) */}
-                    <div className="w-full md:w-[380px] bg-[#213545] rounded-2xl p-6 flex flex-col gap-6 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-[#2f4553]/50 relative overflow-hidden group">
-                        {/* Internal Lighting Effect */}
-                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-6 h-full">
-                            {/* Input Field */}
-                            <div className="bg-[#0f212e]/50 p-4 rounded-xl border border-[#2f4553] flex flex-col gap-2 relative transition-all duration-300 hover:border-[#557086] hover:bg-[#0f212e]/70 focus-within:border-[var(--primary-blue)] focus-within:shadow-[0_0_0_3px_rgba(20,117,225,0.2)] shadow-inner">
-                                <label className="text-[11px] font-extrabold text-[#8a9db5] pl-1 uppercase tracking-wider flex items-center gap-1">
-                                    Stake Amount
-                                    <span className="w-1 h-1 rounded-full bg-[var(--primary-blue)]"></span>
+                        <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
+                            <div className="space-y-4">
+                                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                                    Injection Amount
                                 </label>
-                                <div className="flex justify-between items-center gap-3">
-                                    <div className="flex items-center gap-3 flex-1 bg-[#071824] rounded-lg px-3 py-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-                                        <Coins className="w-5 h-5 text-[var(--primary-blue)] drop-shadow-[0_0_8px_rgba(20,117,225,0.5)]" />
-                                        <input
-                                            type="number"
-                                            value={stakeAmount}
-                                            onChange={(e) => setStakeAmount(e.target.value)}
-                                            min="1"
-                                            className="bg-transparent text-white font-black text-xl w-full outline-none placeholder-[#2f4553] font-mono tracking-tight"
-                                            disabled={loading}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Multiplier Info Panel */}
-                            <div className="bg-[#0f212e]/50 p-4 rounded-xl border border-[#2f4553] flex-1 flex flex-col relative shadow-inner">
-                                <label className="text-[11px] font-extrabold text-[#8a9db5] mb-3 uppercase tracking-wider flex items-center gap-1">
-                                    Payout Structure
-                                </label>
-
-                                <div className="grid grid-cols-2 gap-3 flex-1">
-                                    <div className="bg-[#071824] rounded-lg p-3 border border-[#2f4553]/30 flex flex-col items-center justify-center shadow-sm hover:border-[#2f4553] transition-colors">
-                                        <div className="text-[var(--success-green)] text-xl font-black font-mono">20x</div>
-                                        <div className="text-[#8a9db5] text-[10px] font-bold uppercase mt-1">6 Turns</div>
-                                    </div>
-                                    <div className="bg-[#071824] rounded-lg p-3 border border-[#2f4553]/30 flex flex-col items-center justify-center shadow-sm hover:border-[#2f4553] transition-colors">
-                                        <div className="text-[var(--primary-blue)] text-xl font-black font-mono">5x</div>
-                                        <div className="text-[#8a9db5] text-[10px] font-bold uppercase mt-1">7-8 Turns</div>
-                                    </div>
-                                    <div className="bg-[#071824] rounded-lg p-3 border border-[#2f4553]/30 flex flex-col items-center justify-center shadow-sm hover:border-[#2f4553] transition-colors">
-                                        <div className="text-yellow-400 text-xl font-black font-mono">3x</div>
-                                        <div className="text-[#8a9db5] text-[10px] font-bold uppercase mt-1">9-10 Turns</div>
-                                    </div>
-                                    <div className="bg-[#071824] rounded-lg p-3 border border-[#2f4553]/30 flex flex-col items-center justify-center shadow-sm hover:border-[#2f4553] transition-colors">
-                                        <div className="text-orange-400 text-xl font-black font-mono">1.5x</div>
-                                        <div className="text-[#8a9db5] text-[10px] font-bold uppercase mt-1">11-12 Turns</div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-3 text-center">
-                                    <span className="text-[10px] font-bold text-red-500/80 bg-red-500/10 px-3 py-1 rounded-full uppercase tracking-wide">
-                                        &gt; 12 Turns = Loss
+                                <div className="relative group">
+                                    <input
+                                        type="number"
+                                        value={stakeAmount}
+                                        onChange={(e) => setStakeAmount(e.target.value)}
+                                        min="1"
+                                        className="w-full bg-zinc-900/50 text-4xl font-light text-white border-b-2 border-zinc-800 focus:border-white outline-none py-4 transition-all placeholder-zinc-800 font-mono"
+                                        placeholder="0"
+                                        disabled={loading}
+                                    />
+                                    <span className="absolute right-0 top-1/2 -translate-y-1/2 text-sm text-zinc-600 font-medium">
+                                        PT
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Main Action Button */}
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-zinc-500">Yield Structure</span>
+                                    <span className="text-white font-mono opacity-50">v1.0</span>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
+                                        <span className="text-zinc-400">Perfect Run (6 Turns)</span>
+                                        <span className="font-mono text-white">20x</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
+                                        <span className="text-zinc-500">Optimal (7-8 Turns)</span>
+                                        <span className="font-mono text-zinc-300">5x</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs py-2 border-b border-zinc-900">
+                                        <span className="text-zinc-600">Standard (9-10 Turns)</span>
+                                        <span className="font-mono text-zinc-500">3x</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button
                                 type="submit"
                                 disabled={loading || !stakeAmount || parseInt(stakeAmount) <= 0}
-                                className="w-full bg-gradient-to-br from-[var(--primary-blue)] to-blue-700 hover:brightness-110 text-white font-black py-4 rounded-xl shadow-[0_6px_0_#005a9e,_0_15px_20px_-5px_rgba(0,90,158,0.4)] active:shadow-none active:translate-y-[6px] transition-all transform hover:scale-[1.01] disabled:opacity-75 disabled:cursor-not-allowed uppercase tracking-wider text-sm"
+                                className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {loading ? "STARTING..." : (
-                                    <span className="flex items-center justify-center gap-2">
-                                        START GAME <ArrowRight className="w-4 h-4 ml-1" />
-                                    </span>
+                                {loading ? (
+                                    <span className="animate-pulse">INITIALIZING...</span>
+                                ) : (
+                                    <>
+                                        INITIATE PROTOCOL <ArrowRight className="w-4 h-4" />
+                                    </>
                                 )}
                             </button>
                         </form>
-                    </div>
-
-                    {/* Info / Decorative Panel (Right Side to fill space) */}
-                    <div className="hidden md:flex flex-1 bg-[#0f212e] rounded-2xl p-8 items-center justify-center border border-[#2f4553]/50 shadow-inner relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-
-                        <div className="text-center z-10 max-w-xs">
-                            <div className="w-24 h-24 bg-[#213545] rounded-xl mx-auto mb-6 shadow-[0_10px_0_#1a2c38] border border-[#2f4553] flex items-center justify-center rotate-3 transform hover:rotate-6 transition-transform duration-500">
-                                <span className="text-4xl">🎴</span>
-                            </div>
-                            <h3 className="text-white font-black text-xl mb-2">12 CARDS • 6 PAIRS</h3>
-                            <p className="text-[#8a9db5] text-sm leading-relaxed">
-                                Test your memory and speed. Match all pairs as fast as possible to maximize your multiplier.
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>

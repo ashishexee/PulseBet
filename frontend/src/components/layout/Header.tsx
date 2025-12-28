@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Hammer, Wallet, LogOut, Copy, Check } from "lucide-react";
+import { Menu, Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
 import { useState } from "react";
@@ -31,85 +31,73 @@ export function Header({ toggleSidebar }: HeaderProps) {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 h-16 bg-[#0F172A] border-b border-[#1E293B] flex items-center justify-between px-6 z-50">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-                {/* Menu Button for Mobile/Toggle */}
-                <button onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="mr-2 text-gray-400 hover:text-white">
-                    <Hammer className="w-6 h-6 rotate-90" />
+        <header className="fixed top-0 left-0 right-0 h-16 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between px-6 z-50">
+            <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate("/")}>
+                <button onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="text-zinc-400 hover:text-white transition-colors">
+                    <Menu className="w-6 h-6" />
                 </button>
-                <span className="text-xl font-bold bg-gradient-to-r from-[#3B82F6] to-[#2563EB] bg-clip-text text-transparent">
-                    PulseBet
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-white rounded-full"></span>
+                    <span className="text-xl font-bold tracking-tighter text-white">
+                        PulseBet.
+                    </span>
+                </div>
             </div>
 
             <div className="flex items-center gap-4">
                 {isConnected ? (
-                    <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-end mr-4">
-                            <span className="text-xs text-gray-400">Address</span>
+                    <div className="flex items-center gap-6">
+                        {/* Token Balance */}
+                        <div className="hidden md:flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Available</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-mono text-green-400 max-w-[100px] truncate" title={owner || ""}>
-                                    {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : "..."}
+                                <span className="font-mono font-bold text-white text-sm">
+                                    {tokenBalance ?? "0"} PT
                                 </span>
-                                <button
-                                    onClick={() => owner && copyToClipboard(owner, 'address')}
-                                    className="text-gray-400 hover:text-green-400 transition-colors"
-                                    title="Copy address"
-                                >
-                                    {copiedAddress ? (
-                                        <Check className="w-3 h-3 text-green-400" />
-                                    ) : (
-                                        <Copy className="w-3 h-3" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-end mr-4">
-                            <span className="text-xs text-gray-400">Chain ID</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-mono text-blue-400 max-w-[100px] truncate" title={chainId || ""}>
-                                    {chainId ? `${chainId.slice(0, 6)}...${chainId.slice(-4)}` : "Loading..."}
-                                </span>
-                                <button
-                                    onClick={() => chainId && copyToClipboard(chainId, 'chainId')}
-                                    className="text-gray-400 hover:text-blue-400 transition-colors"
-                                    title="Copy chain ID"
-                                >
-                                    {copiedChainId ? (
-                                        <Check className="w-3 h-3 text-blue-400" />
-                                    ) : (
-                                        <Copy className="w-3 h-3" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-end mr-4">
-                            <span className="text-xs text-gray-400">Balance</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-mono text-pink-500" title="PulseToken">
-                                    {tokenBalance ?? "..."} PULSE
-                                </span>
-                                <span className="text-xs text-gray-600">|</span>
-                                <span className="text-sm font-mono text-[#3B82F6]" title="Native BUILD">
-                                    {balance !== null ? `${balance} BUILD` : "..."}
+                                <span className="text-zinc-700 text-xs">|</span>
+                                <span className="font-mono text-zinc-400 text-xs">
+                                    {balance ?? "0"} BUILD
                                 </span>
                             </div>
                         </div>
+
+                        {/* Network Info */}
+                        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-zinc-950 rounded-lg border border-zinc-800">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-mono text-zinc-400 truncate max-w-[100px]">
+                                {chainId ? `${chainId.slice(0, 8)}...` : "Loading..."}
+                            </span>
+                            <button
+                                onClick={() => chainId && copyToClipboard(chainId, 'chainId')}
+                                className="text-zinc-600 hover:text-white transition-colors"
+                            >
+                                {copiedChainId ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                        </div>
+
+                        {/* Wallet Address */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 rounded-lg border border-zinc-800 group hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => owner && copyToClipboard(owner, 'address')}>
+                            <span className="text-xs font-mono text-white truncate max-w-[80px]">
+                                {owner ? `${owner.slice(0, 6)}...${owner.slice(-4)}` : "..."}
+                            </span>
+                            {copiedAddress ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3 text-zinc-600 group-hover:text-white transition-colors" />}
+                        </div>
+
                         <button
                             onClick={disconnect}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer"
+                            className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+                            title="Disconnect"
                         >
                             <LogOut className="w-4 h-4" />
-                            <span>Disconnect</span>
                         </button>
                     </div>
                 ) : (
                     <button
                         onClick={connect}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium transition-all shadow-lg shadow-blue-500/20 cursor-pointer"
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all transform active:scale-95"
                     >
                         <Wallet className="w-4 h-4" />
-                        <span>Connect MetaMask</span>
+                        <span>Connect Protocol</span>
                     </button>
                 )}
             </div>

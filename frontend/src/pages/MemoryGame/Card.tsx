@@ -15,7 +15,6 @@ const CARD_IMAGES = [
 ];
 
 export const Card = ({
-    // position,  // Not used currently
     imageId,
     isRevealed,
     isMatched,
@@ -29,51 +28,52 @@ export const Card = ({
         <motion.div
             className="relative w-full aspect-square cursor-pointer"
             onClick={!disabled && !isMatched ? onClick : undefined}
-            whileHover={!disabled && !isMatched ? { scale: 1.05 } : {}}
-            whileTap={!disabled && !isMatched ? { scale: 0.95 } : {}}
+            whileHover={!disabled && !isMatched ? { scale: 1.02 } : {}}
+            whileTap={!disabled && !isMatched ? { scale: 0.98 } : {}}
         >
             <motion.div
-                className="w-full h-full relative preserve-3d"
+                className="w-full h-full relative"
                 animate={{ rotateY: showFront ? 180 : 0 }}
-                transition={{ duration: 0.6 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
                 style={{ transformStyle: 'preserve-3d' }}
             >
-                {/* Back side - Tactical Button Look */}
+                {/* Back side - Minimalist Tech */}
                 <div
-                    className="absolute w-full h-full backface-hidden rounded-lg bg-gradient-to-b from-[#3a5b74] to-[#2f4553] flex items-center justify-center border border-[#2f4553] shadow-[0_5px_0_#1a2c38]"
+                    className="absolute w-full h-full backface-hidden rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg group"
                     style={{ backfaceVisibility: 'hidden' }}
                 >
-                    <div className="text-2xl opacity-20">❖</div>
+                    <div className="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center">
+                        <div className="w-2 h-2 bg-zinc-500 rounded-full"></div>
+                    </div>
+                    {/* Corner accents */}
+                    <div className="absolute top-2 left-2 w-1 h-1 bg-zinc-800"></div>
+                    <div className="absolute top-2 right-2 w-1 h-1 bg-zinc-800"></div>
+                    <div className="absolute bottom-2 left-2 w-1 h-1 bg-zinc-800"></div>
+                    <div className="absolute bottom-2 right-2 w-1 h-1 bg-zinc-800"></div>
                 </div>
 
-                {/* Front side - Recessed Screen Look */}
+                {/* Front side - Clean Display */}
                 <div
-                    className={`absolute w-full h-full backface-hidden rounded-lg flex items-center justify-center border-2 shadow-inner ${isMatched
-                        ? 'bg-[#071824] border-[#00e701] shadow-[0_0_15px_rgba(0,231,1,0.2)]'
+                    className={`absolute w-full h-full backface-hidden rounded-xl flex items-center justify-center border shadow-xl ${isMatched
+                        ? 'bg-zinc-200 border-zinc-200'
                         : isFirst
-                            ? 'bg-[#071824] border-[var(--primary-blue)] shadow-[0_0_15px_rgba(20,117,225,0.2)]'
-                            : 'bg-[#071824] border-[#2f4553]/50'
+                            ? 'bg-zinc-800 border-zinc-600'
+                            : 'bg-zinc-950 border-zinc-800'
                         }`}
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)'
                     }}
                 >
-                    <div className="text-5xl drop-shadow-md">
+                    <div className={`text-4xl ${isMatched ? 'grayscale-0' : 'grayscale text-white'}`}>
                         {imageId !== null && CARD_IMAGES[imageId]}
                     </div>
+
+                    {isMatched && (
+                        <div className="absolute inset-0 border-2 border-zinc-900 rounded-xl opacity-10"></div>
+                    )}
                 </div>
             </motion.div>
-
-            {isFirst && (
-                <motion.div
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-sm font-bold z-10 shadow-lg"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                >
-                    1
-                </motion.div>
-            )}
         </motion.div>
     );
 };

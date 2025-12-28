@@ -32,97 +32,138 @@ export default function Faucets() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="text-center space-y-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-                    Faucets
-                </h1>
-                <p className="text-gray-400">Get free tokens to start playing</p>
-            </div>
+        <div className="min-h-[80vh] flex items-center justify-center font-sans antialiased text-white selection:bg-white selection:text-black">
+            <div className="max-w-5xl w-full p-6 space-y-12">
 
-            <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-[#1a2332] to-[#0f1520] rounded-2xl p-6 border border-[#2a3441] shadow-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-3 bg-blue-500/10 rounded-xl">
-                            <Coins className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Linera Faucet</h2>
-                            <p className="text-sm text-gray-400">Native blockchain token</p>
-                        </div>
+                {/* Header */}
+                <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                        <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Testnet Resources</span>
                     </div>
-
-                    <div className="space-y-4">
-                        <div className="bg-[#0f1520] rounded-xl p-4">
-                            <div className="text-sm text-gray-400 mb-1">Current Balance</div>
-                            <div className="text-2xl font-bold text-white">{balance || '0'} LINERA</div>
-                        </div>
-
-                        <button
-                            onClick={handleFaucetRequest}
-                            disabled={loading || !owner}
-                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            <Zap className="w-5 h-5" />
-                            {loading ? 'Processing...' : 'Request 10 LINERA'}
-                        </button>
-
-                        <p className="text-xs text-gray-500 text-center">
-                            Free tokens for testing purposes
+                    <div className="space-y-1">
+                        <h1 className="text-6xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500">
+                            Asset Faucets.
+                        </h1>
+                        <p className="text-lg text-zinc-500 max-w-md leading-relaxed">
+                            Request testnet liquidity. Mint PulseTokens for protocol interaction.
                         </p>
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-[#1a2332] to-[#0f1520] rounded-2xl p-6 border border-[#2a3441] shadow-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-3 bg-purple-500/10 rounded-xl">
-                            <Coins className="w-6 h-6 text-purple-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">PulseToken Faucet</h2>
-                            <p className="text-sm text-gray-400">Game currency token</p>
+                <div className="grid md:grid-cols-2 gap-8">
+
+                    {/* Linera Faucet Card */}
+                    <div className="group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl pointer-events-none"></div>
+
+                        <div className="h-full bg-black rounded-[20px] p-8 flex flex-col justify-between relative z-10">
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                                        <Coins className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-white tracking-tight">Linera Native</h2>
+                                        <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">L1 Blockchain</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="text-xs font-medium text-zinc-500 uppercase tracking-widest">Current Balance</div>
+                                    <div className="text-3xl font-mono font-bold text-white tracking-tight">
+                                        {balance || '0'} <span className="text-lg text-zinc-600">LINERA</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 pt-8 border-t border-zinc-900 space-y-4">
+                                <button
+                                    onClick={handleFaucetRequest}
+                                    disabled={loading || !owner}
+                                    className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                                >
+                                    {loading ? (
+                                        <span className="animate-pulse">PROCESSING...</span>
+                                    ) : (
+                                        <>
+                                            <Zap className="w-4 h-4 fill-black" />
+                                            REQUEST 10 LINERA
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-[10px] text-zinc-600 text-center uppercase tracking-widest">
+                                    Allocated for testing only
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="bg-[#0f1520] rounded-xl p-4">
-                            <div className="text-sm text-gray-400 mb-1">Token Balance</div>
-                            <div className="text-2xl font-bold text-white">{tokenBalance || '0'} PULSE</div>
+                    {/* PulseToken Faucet Card */}
+                    <div className="group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl pointer-events-none"></div>
+
+                        <div className="h-full bg-black rounded-[20px] p-8 flex flex-col justify-between relative z-10">
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                                        <Coins className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold text-white tracking-tight">PulseToken</h2>
+                                        <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Protocol Utility</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="text-xs font-medium text-zinc-500 uppercase tracking-widest">Token Balance</div>
+                                    <div className="text-3xl font-mono font-bold text-white tracking-tight">
+                                        {tokenBalance || '0'} <span className="text-lg text-zinc-600">PULSE</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest">Mint Allocation</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={tokenMintAmount}
+                                            onChange={(e) => setTokenMintAmount(e.target.value)}
+                                            className="w-full bg-zinc-900/50 text-white font-mono border border-zinc-800 rounded-xl px-4 py-3 focus:outline-none focus:border-white transition-colors"
+                                            placeholder="0"
+                                            min="1"
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-600 font-bold">PT</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleTokenMint}
+                                    disabled={loading || !isReady || !tokenMintAmount}
+                                    className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-zinc-700"
+                                >
+                                    {loading ? (
+                                        <span className="animate-pulse">MINTING...</span>
+                                    ) : (
+                                        <>
+                                            MINT TOKENS
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
-
-                        <div>
-                            <label className="text-sm text-gray-400 mb-2 block">Mint Amount</label>
-                            <input
-                                type="number"
-                                value={tokenMintAmount}
-                                onChange={(e) => setTokenMintAmount(e.target.value)}
-                                className="w-full bg-[#0f1520] border border-[#2a3441] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors"
-                                placeholder="Enter amount"
-                                min="1"
-                            />
-                        </div>
-
-                        <button
-                            onClick={handleTokenMint}
-                            disabled={loading || !isReady || !tokenMintAmount}
-                            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            <Zap className="w-5 h-5" />
-                            {loading ? 'Minting...' : `Mint ${tokenMintAmount} PULSE`}
-                        </button>
-
-                        <p className="text-xs text-gray-500 text-center">
-                            Custom token for in-game use
-                        </p>
                     </div>
                 </div>
+
+                {!owner && (
+                    <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 text-zinc-500 text-sm">
+                        <span className="w-2 h-2 bg-yellow-500/50 rounded-full animate-pulse"></span>
+                        Wallet connection required for interaction
+                    </div>
+                )}
             </div>
-
-            {!owner && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-center">
-                    <p className="text-yellow-400">Please connect your wallet to use the faucets</p>
-                </div>
-            )}
         </div>
     );
 }

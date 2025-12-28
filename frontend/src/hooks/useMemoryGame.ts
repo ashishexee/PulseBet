@@ -34,6 +34,7 @@ export const useMemoryGame = () => {
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isGameReset, setIsGameReset] = useState(false);
     const executeQuery = useCallback(async (query: string) => {
         if (!client || !chainId) return null;
 
@@ -68,8 +69,19 @@ export const useMemoryGame = () => {
 
         try {
             const data = await executeQuery(query);
-            console.log(data);
+            // console.log(data); // Reduced log noise
             if (data?.activeGame) {
+                // If we are in "reset" mode, only accept a new game that is PLAYING
+                if (isGameReset) {
+                    if (data.activeGame.state === 'PLAYING') {
+                        setIsGameReset(false);
+                        setGameState(data.activeGame);
+                        return true;
+                    }
+                    // Still finished/claimed, so ignore it and keep showing null (Stake Screen)
+                    return false;
+                }
+
                 setGameState(data.activeGame);
                 return true;
             } else {
@@ -80,7 +92,7 @@ export const useMemoryGame = () => {
             console.error('Fetch game error:', error);
             return false;
         }
-    }, [executeQuery, owner]);
+    }, [executeQuery, owner, isGameReset]);
 
     const waitForGameActive = useCallback(async (maxAttempts = 10, delayMs = 1000): Promise<boolean> => {
         for (let i = 0; i < maxAttempts; i++) {
@@ -214,6 +226,11 @@ export const useMemoryGame = () => {
         return stakeAmount * multiplier;
     }, []);
 
+    const resetGame = useCallback(() => {
+        setGameState(null);
+        setIsGameReset(true);
+    }, []);
+
     useEffect(() => {
         if (owner) {
             fetchGame();
@@ -236,5 +253,6 @@ export const useMemoryGame = () => {
         revealCard,
         claimPayout,
         calculatePotentialPayout,
+        resetGame,
     };
 };
