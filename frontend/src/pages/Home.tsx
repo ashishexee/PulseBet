@@ -3,7 +3,6 @@ import { Pickaxe, Brain, ChevronRight, Zap, Cpu, Activity, ExternalLink, Databas
 
 export const Home = () => {
     const navigate = useNavigate();
-
     const protocols = [
         {
             id: 'mines',
@@ -68,12 +67,12 @@ export const Home = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                             </span>
-                            <span className="text-xs font-mono font-bold text-zinc-300 tracking-wider uppercase">Linera Hackathon 2024</span>
+                            <span className="text-xs font-mono font-bold text-zinc-300 tracking-wider">Linera AKINDO Wavehack</span>
                         </div>
 
                         <div className="space-y-6">
                             <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white animate-fade-in-up delay-100 leading-[0.85]">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">PulseBet.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">PulseBet</span>
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">
