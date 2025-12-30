@@ -71,8 +71,9 @@ export const Home = () => {
                         </div>
 
                         <div className="space-y-6">
-                            <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white animate-fade-in-up delay-100 leading-[0.85]">
+                            <h1 className="flex items-center gap-4 md:gap-6 text-7xl md:text-9xl font-black tracking-tighter text-white animate-fade-in-up delay-100 leading-[0.85]">
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">PulseBet</span>
+                                 <img src="/assets/logo/logo_png.png" alt="PulseBet" className="w-16 h-16 md:w-32 md:h-32 object-contain" />
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">
