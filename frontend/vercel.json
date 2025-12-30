@@ -22,6 +22,10 @@
     {
       "source": "/faucet-proxy/(.*)",
       "destination": "https://faucet.testnet-conway.linera.net/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

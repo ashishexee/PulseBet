@@ -2,3 +2,5 @@
 /contracts/mines/target
 /contracts/pulse_token/target
 /contracts/memory_game/target
+/contracts/color_trading/target
+/scripts/node_modules
