@@ -3,4 +3,5 @@
 /contracts/pulse_token/target
 /contracts/memory_game/target
 /contracts/color_trading/target
+/contracts/wordle/target
 /scripts/node_modules
