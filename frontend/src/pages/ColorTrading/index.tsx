@@ -26,7 +26,6 @@ export const ColorTrading = () => {
     const isRevealing = round?.state === RoundState.Revealing;
     const isCooldown = round?.state === RoundState.Cooldown;
 
-    // Status Text Logic
     let statusText = 'Unknown Status';
     if (isBetting) {
         statusText = timeLeft === 0 ? 'Waiting for Result...' : 'Bidding Interval';
@@ -44,7 +43,6 @@ export const ColorTrading = () => {
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 2000);
         } catch (e) {
-            // Error handled by hook
         }
     };
 
