@@ -76,26 +76,6 @@ export default function Faucets() {
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="mt-8 pt-8 border-t border-zinc-900 space-y-4">
-                                <button
-                                    onClick={handleFaucetRequest}
-                                    disabled={loading || !owner}
-                                    className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                                >
-                                    {loading ? (
-                                        <span className="animate-pulse">PROCESSING...</span>
-                                    ) : (
-                                        <>
-                                            <Zap className="w-4 h-4 fill-black" />
-                                            REQUEST 10 LINERA
-                                        </>
-                                    )}
-                                </button>
-                                <p className="text-[10px] text-zinc-600 text-center uppercase tracking-widest">
-                                    Allocated for testing only
-                                </p>
-                            </div>
                         </div>
                     </div>
 
@@ -164,6 +144,20 @@ export default function Faucets() {
                     </div>
                 )}
             </div>
+
+            {loading && (
+                <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-white rounded-full animate-pulse opacity-20"></div>
+                        </div>
+                    </div>
+                    <div className="mt-8 font-mono text-xs tracking-[0.2em] text-zinc-500 animate-pulse">
+                        INITIALIZING PROTOCOL...
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

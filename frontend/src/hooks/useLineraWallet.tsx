@@ -199,7 +199,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             const faucet = new Faucet(faucetUrl);
             const wallet = await faucet.createWallet();
             const chain = await faucet.claimChain(wallet, owner);
-
             console.log("Funds requested, chain updated:", chain);
             fetchBalance();
         } catch (e: any) {

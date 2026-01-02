@@ -50,8 +50,16 @@ export const ColorTrading = () => {
 
     if (!hasFetched) {
         return (
-            <div className="h-[600px] flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-8 bg-white rounded-full animate-pulse opacity-20"></div>
+                    </div>
+                </div>
+                <div className="mt-8 font-mono text-xs tracking-[0.2em] text-zinc-500 animate-pulse">
+                    INITIALIZING PROTOCOL...
+                </div>
             </div>
         );
     }
@@ -88,7 +96,23 @@ export const ColorTrading = () => {
                     )}
                     <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Powered by Linera Automation</p>
                 </div>
-            </div>
+
+                {
+                    loading && (
+                        <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+                            <div className="relative">
+                                <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-white rounded-full animate-pulse opacity-20"></div>
+                                </div>
+                            </div>
+                            <div className="mt-8 font-mono text-xs tracking-[0.2em] text-zinc-500 animate-pulse">
+                                INITIALIZING PROTOCOL...
+                            </div>
+                        </div>
+                    )
+                }
+            </div >
         );
     }
 
@@ -392,6 +416,19 @@ export const ColorTrading = () => {
                     </div>
                 </div>
             </div>
+            {loading && (
+                <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-white rounded-full animate-pulse opacity-20"></div>
+                        </div>
+                    </div>
+                    <div className="mt-8 font-mono text-xs tracking-[0.2em] text-zinc-500 animate-pulse">
+                        INITIALIZING PROTOCOL...
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

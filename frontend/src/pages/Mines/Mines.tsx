@@ -5,21 +5,15 @@ import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
 
 export const Mines = () => {
-    // Game Hooks
     const { gameState, loading, startGame, revealTile, cashOut } = useMinesGame();
     const { isConnected, connect } = useLineraWallet();
-    const { tokenBalance } = usePulseToken();  // Use PulseToken balance
-
-    // Local UI State
+    const { tokenBalance } = usePulseToken();  
     const [betAmount, setBetAmount] = useState<number>(0);
     const [minesCount, setMinesCount] = useState<number>(3);
-
-    // Derived UI State from Blockchain Data
     const isGameActive = gameState?.result === 'ACTIVE';
     const revealedTiles = gameState?.revealedTiles || [];
     const isGameOver = gameState?.result === 'LOST' || gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT';
 
-    // Determine tile state and content
     const getTileContent = (id: number) => {
         const isRevealed = revealedTiles.includes(id);
         const isMine = gameState?.mineIndices?.includes(id) || false;
@@ -41,16 +35,12 @@ export const Mines = () => {
         return null;
     };
 
-
-    // Sound Effects Logic
     const prevRevealedCount = useRef(0);
     const prevResult = useRef<string | null>(null);
     const isInitialized = useRef(false);
 
     useEffect(() => {
         if (!gameState) return;
-
-        // Initialize refs on first valid load to avoid playing sounds on refresh
         if (!isInitialized.current) {
             prevRevealedCount.current = gameState.revealedTiles?.length || 0;
             prevResult.current = gameState.result;
@@ -60,19 +50,16 @@ export const Mines = () => {
 
         const currentRevealedCount = gameState.revealedTiles?.length || 0;
         const currentResult = gameState.result;
-
-        // Play Bomb Sound on Loss
         if (currentResult === 'LOST' && prevResult.current === 'ACTIVE') {
             const audio = new Audio('/assets/sound/bomb_sound.mp3');
             audio.volume = 0.5;
-            audio.play().catch(() => { }); // Ignore interaction errors
+            audio.play().catch(() => { }); 
         }
-        // Play Diamond Sound on Tile Reveal (if not lost)
         else if (currentRevealedCount > prevRevealedCount.current) {
             if (currentResult !== 'LOST') {
                 const audio = new Audio('/assets/sound/diamond_sound.mp3');
                 audio.volume = 0.4;
-                audio.currentTime = 0; // Reset to start for rapid clicks
+                audio.currentTime = 0;  
                 audio.play().catch(() => { });
             }
         }
@@ -264,6 +251,20 @@ export const Mines = () => {
                     })}
                 </div>
             </div>
+
+            {loading && (
+                <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-white rounded-full animate-pulse opacity-20"></div>
+                        </div>
+                    </div>
+                    <div className="mt-8 font-mono text-xs tracking-[0.2em] text-zinc-500 animate-pulse">
+                        INITIALIZING PROTOCOL...
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
