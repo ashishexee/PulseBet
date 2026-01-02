@@ -1,24 +1,14 @@
 import { useState } from 'react';
-import { Coins, Zap } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
 
 export default function Faucets() {
-    const { balance, owner, requestFaucet } = useLineraWallet();
+    const { balance, owner } = useLineraWallet();
     const { tokenBalance, mint, isReady } = usePulseToken();
     const [loading, setLoading] = useState(false);
     const [tokenMintAmount, setTokenMintAmount] = useState('100');
 
-    const handleFaucetRequest = async () => {
-        setLoading(true);
-        try {
-            await requestFaucet();
-        } catch (error) {
-            console.error("Faucet request failed:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleTokenMint = async () => {
         setLoading(true);
