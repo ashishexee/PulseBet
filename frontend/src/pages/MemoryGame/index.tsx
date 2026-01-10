@@ -3,7 +3,39 @@ import { useMemoryGame } from '../../hooks/useMemoryGame';
 import { StakeScreen } from './StakeScreen';
 import { GameBoard } from './GameBoard';
 import { ResultScreen } from './ResultScreen';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Brain, Clock, Zap } from 'lucide-react';
+import { useLineraWallet } from '../../hooks/useLineraWallet';
+import { GameOverlay } from '../../components/GameOverlay';
+
+const MEMORY_RULES = (
+    <div className="space-y-4">
+        <div className="space-y-2">
+            <h4 className="text-white font-bold text-sm uppercase tracking-wider">Game Objective</h4>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+                Match all 6 pairs of cards with the fewest turns possible. Efficiency determines your payout multiplier.
+            </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <Brain className="w-5 h-5 text-indigo-400" />
+                <div className="text-xs text-zinc-300"><strong>Memorize</strong> card positions to minimize errors.</div>
+            </div>
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <Clock className="w-5 h-5 text-emerald-400" />
+                <div className="text-xs text-zinc-300"><strong>Speed</strong> is not a factor, focus on turn efficiency.</div>
+            </div>
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <Zap className="w-5 h-5 text-yellow-400" />
+                <div className="text-xs text-zinc-300"><strong>Multiplier</strong> decreases as turn count increases.</div>
+            </div>
+        </div>
+
+        <div className="mt-2 text-center text-[10px] text-zinc-500 font-mono tracking-wider uppercase">
+            Perfect Game = 20x Multiplier
+        </div>
+    </div>
+);
 
 export const MemoryGame = () => {
     const {
@@ -16,6 +48,8 @@ export const MemoryGame = () => {
         claimPayout,
         resetGame,
     } = useMemoryGame();
+
+    const { isConnected, connect } = useLineraWallet();
 
     const [gameActiveInSession, setGameActiveInSession] = useState(false);
     useEffect(() => {
@@ -83,6 +117,13 @@ export const MemoryGame = () => {
 
     return (
         <>
+            <GameOverlay
+                isConnected={isConnected}
+                connect={connect}
+                gameId="memory"
+                gameTitle="Memory Protocol"
+                rules={MEMORY_RULES}
+            />
             {renderContent()}
             {loading && (
                 <div className="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center">

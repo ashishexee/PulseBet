@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Target, Trophy, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StakeScreenProps {
     onCreateGame: (stake: number) => Promise<void>;
@@ -17,155 +18,150 @@ export const StakeScreen = ({ onCreateGame, loading }: StakeScreenProps) => {
         }
     };
 
+    const tiers = [
+        { label: 'Perfect Run', turns: '6 Turns', multiplier: '20x', color: 'emerald', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+        { label: 'Optimal', turns: '7-8 Turns', multiplier: '5x', color: 'blue', bg: 'bg-blue-500/5', border: 'border-blue-500/10', text: 'text-blue-400' },
+        { label: 'Standard', turns: '9-10 Turns', multiplier: '3x', color: 'zinc', bg: 'bg-zinc-500/5', border: 'border-zinc-500/10', text: 'text-zinc-400' },
+    ];
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white font-sans antialiased selection:bg-white selection:text-black">
-            {/* Subtle background noise/grid */}
-            <div className="fixed inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white font-sans antialiased selection:bg-white selection:text-black overflow-hidden relative">
+            {/* Ambient Background */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-purple-500/5 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px]" />
+                <div className="fixed inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+            </div>
 
-            <div className="max-w-4xl w-full flex flex-col md:flex-row gap-12 p-8 md:p-12 z-10">
-                {/* Left: Branding & Info */}
-                <div className="flex-1 flex flex-col justify-center space-y-8">
-                    <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
-                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                            <span className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Live Testnet</span>
+            <div className="max-w-[1400px] w-full p-6 md:p-12 relative z-10">
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+
+                    {/* Left Column: Brand & Context (4 cols) */}
+                    <div className="lg:col-span-4 space-y-8">
+                        <div className="space-y-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/80 backdrop-blur-md">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                <span className="text-xs font-bold text-zinc-400 tracking-widest uppercase">Memory Protocol V1</span>
+                            </div>
+                            <h1 className="text-6xl lg:text-8xl font-black tracking-tighter text-white leading-[0.85]">
+                                TOTAL<br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 to-zinc-600">RECALL.</span>
+                            </h1>
+                            <p className="text-lg text-zinc-400 max-w-md leading-relaxed font-light">
+                                Prove your cognitive retention in a decentralized environment. Match pairs with minimal entropy to maximize your yield.
+                            </p>
                         </div>
-                        <h1 className="text-6xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500">
-                            Memory<br />Protocol.
-                        </h1>
-                        <p className="text-lg text-zinc-500 max-w-sm leading-relaxed">
-                            A decentralized test of cognitive retention.
-                            Match pairs. Minimize entropy. Maximise yield.
-                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Brain className="w-5 h-5 text-zinc-500" />
+                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Grid Size</span>
+                                </div>
+                                <div className="text-2xl font-mono font-bold text-white">6 <span className="text-sm text-zinc-600 font-sans">Pairs</span></div>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Zap className="w-5 h-5 text-emerald-500" />
+                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Max Yield</span>
+                                </div>
+                                <div className="text-2xl font-mono font-bold text-white">20.0x</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-xl border border-zinc-900 bg-zinc-900/20 backdrop-blur-sm">
-                            <div className="text-2xl font-semibold">6</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider mt-1">Pairs</div>
-                        </div>
-                        <div className="p-4 rounded-xl border border-zinc-900 bg-zinc-900/20 backdrop-blur-sm">
-                            <div className="text-2xl font-semibold">20x</div>
-                            <div className="text-xs text-zinc-500 uppercase tracking-wider mt-1">Max Yield</div>
-                        </div>
-                    </div>
-                </div>
+                    {/* Right Column: Interaction Panel (8 cols) */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-zinc-900/30 backdrop-blur-xl rounded-[2rem] border border-zinc-800 p-8 lg:p-10 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-32 bg-white/5 blur-[100px] rounded-full pointer-events-none"></div>
 
-                {/* Right: Interaction */}
-                <div className="w-full md:w-[400px]">
-                    <div className="bg-black rounded-3xl p-8 border border-zinc-800 shadow-2xl shadow-zinc-950/50 relative overflow-hidden">
-                        {/* Gradient Border Hint */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                            <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
 
-                        <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-                            <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2 text-sm font-bold text-white uppercase tracking-wider">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                                        Injection Amount
-                                    </label>
-                                    <div className="relative group">
-                                        <input
-                                            type="number"
-                                            value={stakeAmount}
-                                            onChange={(e) => setStakeAmount(e.target.value)}
-                                            min="1"
-                                            className="w-full bg-zinc-900 text-5xl font-medium text-white border-2 border-zinc-800 focus:border-white focus:ring-4 focus:ring-zinc-800 outline-none py-6 px-4 rounded-xl transition-all placeholder-zinc-700 font-mono shadow-inner"
-                                            placeholder="0"
-                                            disabled={loading}
-                                        />
-                                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-lg font-bold text-zinc-500">
-                                            PT
+                                {/* Top Row: Input & Potential */}
+                                <div className="grid md:grid-cols-2 gap-8 items-stretch">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                            <div className="w-1 h-1 bg-white rounded-full"></div>
+                                            Injection Amount
+                                        </label>
+                                        <div className="relative group">
+                                            <input
+                                                type="number"
+                                                value={stakeAmount}
+                                                onChange={(e) => setStakeAmount(e.target.value)}
+                                                min="1"
+                                                className="w-full bg-black/50 text-6xl font-black text-white border-b-2 border-zinc-800 focus:border-white outline-none py-4 px-2 transition-all placeholder-zinc-800 font-mono tracking-tighter"
+                                                placeholder="0"
+                                                disabled={loading}
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-600 tracking-widest">PT</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-zinc-950/50 rounded-2xl p-6 border border-zinc-800 flex flex-col justify-between group hover:border-zinc-700 transition-colors">
+                                        <div className="flex justify-between items-start">
+                                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Potential Return</span>
+                                            <Target className="w-5 h-5 text-zinc-700 group-hover:text-emerald-500 transition-colors" />
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs font-mono text-zinc-500 mb-1">20x Multiplier</div>
+                                            <div className="text-4xl lg:text-5xl font-mono font-black text-white tracking-tighter">
+                                                {parseInt(stakeAmount) > 0 ? (parseInt(stakeAmount) * 20).toLocaleString() : '0'} <span className="text-lg text-zinc-600">PT</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px w-full bg-gradient-to-r from-transparent via-zinc-800 to-transparent"></div>
+
+                                {/* Prizepool Grid */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Payout Structure</h3>
+                                        <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+                                            <Info className="w-3 h-3" /> Fewer Turns = Higher Multiplier
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {tiers.map((tier, idx) => (
+                                            <div key={idx} className={`relative group p-5 rounded-2xl border ${tier.border} ${tier.bg} hover:bg-opacity-20 transition-all flex flex-col justify-between min-h-[140px] overflow-hidden`}>
+                                                <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity" style={{ color: `var(--${tier.color}-500)` }}></div>
+
+                                                <div className="flex justify-between items-start">
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${tier.text} bg-black/40 px-2 py-1 rounded-md border border-white/5`}>
+                                                        {tier.multiplier}
+                                                    </span>
+                                                    {idx === 0 && <Trophy className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />}
+                                                </div>
+
+                                                <div>
+                                                    <div className="text-lg font-bold text-white mb-1">{tier.label}</div>
+                                                    <div className="text-xs text-zinc-400 font-mono">{tier.turns}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* CTA Button */}
+                                <button
+                                    type="submit"
+                                    disabled={loading || !stakeAmount || parseInt(stakeAmount) <= 0}
+                                    className="w-full group relative overflow-hidden bg-white hover:bg-zinc-200 text-black p-6 rounded-2xl transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-300/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                                    <div className="relative flex items-center justify-center gap-4">
+                                        <span className="text-xl font-black tracking-widest uppercase">
+                                            {loading ? 'INITIALIZING...' : 'INITIATE PROTOCOL'}
                                         </span>
+                                        {!loading && <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />}
                                     </div>
+                                </button>
 
-                                    {/* Dynamic Yield Calculator */}
-                                    {parseInt(stakeAmount) > 0 && (
-                                        <div className="flex items-center justify-between px-2 text-sm animate-fade-in">
-                                            <span className="text-zinc-500">Potential Return (20x)</span>
-                                            <span className="font-mono font-bold text-green-400">
-                                                {(parseInt(stakeAmount) * 20).toLocaleString()} PT
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-6 border-t border-zinc-900">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-zinc-400 font-bold uppercase tracking-widest text-xs">Prizepool Structure</span>
-                                </div>
-
-                                <div className="space-y-3">
-                                    {/* Perfect Run */}
-                                    <div className="relative overflow-hidden p-4 rounded-xl bg-gradient-to-r from-zinc-900 to-zinc-900 border border-emerald-500/30 group hover:border-emerald-500/50 transition-all">
-                                        <div className="absolute top-0 right-0 p-8 bg-emerald-500/10 blur-[30px] rounded-full"></div>
-                                        <div className="flex justify-between items-center relative z-10">
-                                            <div className="flex flex-col">
-                                                <span className="text-white font-bold text-lg">Perfect Run</span>
-                                                <span className="text-zinc-500 text-xs uppercase tracking-wider font-bold">6 Turns</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-mono text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-200">
-                                                    20x
-                                                </div>
-                                                {parseInt(stakeAmount) > 0 && (
-                                                    <div className="text-emerald-500 font-mono text-xs font-bold">
-                                                        = {(parseInt(stakeAmount) * 20).toLocaleString()} PT
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Optimal */}
-                                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 flex justify-between items-center">
-                                        <div className="flex flex-col">
-                                            <span className="text-zinc-300 font-bold">Optimal</span>
-                                            <span className="text-zinc-600 text-xs uppercase tracking-wider font-bold">7-8 Turns</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-mono text-xl font-bold text-white">5x</div>
-                                            {parseInt(stakeAmount) > 0 && (
-                                                <div className="text-zinc-500 font-mono text-xs">
-                                                    = {(parseInt(stakeAmount) * 5).toLocaleString()} PT
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Standard */}
-                                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/50 flex justify-between items-center">
-                                        <div className="flex flex-col">
-                                            <span className="text-zinc-400 font-medium">Standard</span>
-                                            <span className="text-zinc-700 text-xs uppercase tracking-wider font-bold">9-10 Turns</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-mono text-xl font-bold text-zinc-400">3x</div>
-                                            {parseInt(stakeAmount) > 0 && (
-                                                <div className="text-zinc-600 font-mono text-xs">
-                                                    = {(parseInt(stakeAmount) * 3).toLocaleString()} PT
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading || !stakeAmount || parseInt(stakeAmount) <= 0}
-                                className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {loading ? (
-                                    <span className="animate-pulse">INITIALIZING...</span>
-                                ) : (
-                                    <>
-                                        INITIATE PROTOCOL <ArrowRight className="w-4 h-4" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
