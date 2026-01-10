@@ -3,9 +3,43 @@ import { useWordle } from '../../hooks/useWordle';
 import { Grid } from './components/Grid';
 import { Keyboard } from './components/Keyboard';
 import { RotateCcw, Play, Brain, Info } from 'lucide-react';
+import { useLineraWallet } from '../../hooks/useLineraWallet';
+import { GameOverlay } from '../../components/GameOverlay';
+
+const WORDLE_RULES = (
+    <div className="space-y-4">
+        <div className="space-y-2">
+            <h4 className="text-white font-bold text-sm uppercase tracking-wider">Game Objective</h4>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+                Decrypt the secret 5-letter word within 5 attempts. Logic and vocabulary are your only tools.
+            </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center text-black font-bold">A</div>
+                <div className="text-xs text-zinc-400"><strong className="text-green-500">GREEN</strong> means the letter is correct and in the right spot.</div>
+            </div>
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <div className="w-8 h-8 bg-yellow-500 rounded flex items-center justify-center text-black font-bold">B</div>
+                <div className="text-xs text-zinc-400"><strong className="text-yellow-500">YELLOW</strong> means the letter is in the word but wrong spot.</div>
+            </div>
+            <div className="flex items-center gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800">
+                <div className="w-8 h-8 bg-zinc-700 rounded flex items-center justify-center text-zinc-400 font-bold">C</div>
+                <div className="text-xs text-zinc-400"><strong className="text-zinc-500">GREY</strong> means the letter is not in the word.</div>
+            </div>
+        </div>
+
+        <div className="mt-4 p-4 bg-zinc-950/50 rounded-xl border border-zinc-800 text-center">
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">On-Chain Verification</p>
+            <p className="text-white font-mono text-sm">Every guess is cryptographically verified.</p>
+        </div>
+    </div>
+);
 
 export const Wordle: React.FC = () => {
     const { gameSession, loading, startGame, submitGuess } = useWordle();
+    const { isConnected, connect } = useLineraWallet();
     const [currentGuess, setCurrentGuess] = useState("");
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -59,6 +93,13 @@ export const Wordle: React.FC = () => {
     if (gameSession) {
         return (
             <div className="min-h-[calc(100vh-64px)] bg-zinc-950 pt-10 flex flex-col items-center justify-between pb-8 relative overflow-hidden">
+                <GameOverlay
+                    isConnected={isConnected}
+                    connect={connect}
+                    gameId="wordle"
+                    gameTitle="Wordle Protocol"
+                    rules={WORDLE_RULES}
+                />
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none opacity-30">
                     <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-white/5 rounded-full blur-[128px]"></div>
                     <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-zinc-500/10 rounded-full blur-[128px]"></div>
@@ -67,7 +108,6 @@ export const Wordle: React.FC = () => {
                 <div className="flex-1 flex flex-col items-center justify-center w-full max-w-7xl px-4 z-10 relative">
                     <div className="w-full max-w-lg flex flex-col items-center">
                         <div className="mb-8 text-center space-y-4 relative w-full">
-                            {/* Floating Error Toast */}
                             {errorMsg && (
                                 <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-max px-6 py-3 bg-red-500/10 border border-red-500/20 backdrop-blur-xl rounded-full text-red-500 font-bold tracking-widest text-xs animate-in slide-in-from-top-4 shadow-2xl flex items-center gap-2 z-50">
                                     <span className="relative flex h-2 w-2">
@@ -166,6 +206,13 @@ export const Wordle: React.FC = () => {
 
     return (
         <div className="min-h-[calc(100vh-64px)] bg-zinc-950 font-sans flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            <GameOverlay
+                isConnected={isConnected}
+                connect={connect}
+                gameId="wordle"
+                gameTitle="Wordle Protocol"
+                rules={WORDLE_RULES}
+            />
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-zinc-800/20 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-zinc-800/20 rounded-full blur-[100px]" />

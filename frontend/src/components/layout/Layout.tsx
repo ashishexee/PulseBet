@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 
@@ -8,6 +9,15 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const location = useLocation();
+
+    useEffect(() => {
+        const hasOpenedOnce = localStorage.getItem('sidebar_auto_opened');
+        if (location.pathname === '/' && !hasOpenedOnce) {
+            setSidebarOpen(true);
+            localStorage.setItem('sidebar_auto_opened', 'true');
+        }
+    }, [location.pathname]);
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -16,7 +26,7 @@ export const Layout = ({ children }: LayoutProps) => {
             <Header toggleSidebar={toggleSidebar} />
             <div className="relative">
                 <aside
-                    className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-40 overflow-hidden transition-all duration-300 ease-in-out ${sidebarOpen ? 'w-[240px]' : 'w-[80px]'
+                    className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-[49] overflow-hidden transition-all duration-300 ease-in-out ${sidebarOpen ? 'w-[240px]' : 'w-[80px]'
                         }`}
                 >
                     <Sidebar onClose={() => setSidebarOpen(false)} collapsed={!sidebarOpen} />

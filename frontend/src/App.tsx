@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { Mines } from './pages/Mines/Mines';
+import { Bingo } from './pages/Bingo/Bingo';
 import { MemoryGame } from './pages/MemoryGame';
 import { ColorTrading } from './pages/ColorTrading';
 import { Wordle } from './pages/Wordle';
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/games/mining" element={<Mines />} />
+          <Route path="/games/bingo" element={<Bingo />} />
           <Route path="/games/memory" element={<MemoryGame />} />
           <Route path="/games/color-trading" element={<ColorTrading />} />
           <Route path="/games/wordle" element={<Wordle />} />

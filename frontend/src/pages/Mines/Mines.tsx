@@ -3,11 +3,43 @@ import { Gem, Bomb } from 'lucide-react';
 import { useMinesGame } from '../../hooks/useMinesGame';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
+import { GameOverlay } from '../../components/GameOverlay';
+
+const MINES_RULES = (
+    <div className="space-y-4">
+        <div className="space-y-2">
+            <h4 className="text-white font-bold text-sm uppercase tracking-wider">Game Objective</h4>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+                Navigate the grid to find Gems while avoiding hidden Bombs. Each Gem increases your multiplier.
+            </p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800 flex items-center gap-4">
+                <Gem className="w-5 h-5 text-white" />
+                <div className="text-sm text-zinc-300"><strong>Reveal Gems</strong> to increase your payout multiplier.</div>
+            </div>
+            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800 flex items-center gap-4">
+                <Bomb className="w-5 h-5 text-zinc-500" />
+                <div className="text-sm text-zinc-300"><strong>Avoid Bombs</strong> or lose your accumulated stake.</div>
+            </div>
+            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800 flex items-center gap-4">
+                <div className="w-5 h-5 rounded bg-green-500/20 text-green-500 flex items-center justify-center font-bold text-xs">$</div>
+                <div className="text-sm text-zinc-300"><strong>Cash Out</strong> at any time to secure your winnings.</div>
+            </div>
+        </div>
+
+        <div className="mt-2 p-3 bg-zinc-950/50 rounded-xl border border-zinc-800 text-center">
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Risk vs Reward</p>
+            <p className="text-white font-mono text-xs">More Mines = Higher Multiplier = Higher Risk</p>
+        </div>
+    </div>
+);
 
 export const Mines = () => {
     const { gameState, loading, startGame, revealTile, cashOut } = useMinesGame();
     const { isConnected, connect } = useLineraWallet();
-    const { tokenBalance } = usePulseToken();  
+    const { tokenBalance } = usePulseToken();
     const [betAmount, setBetAmount] = useState<number>(0);
     const [minesCount, setMinesCount] = useState<number>(3);
     const isGameActive = gameState?.result === 'ACTIVE';
@@ -53,13 +85,13 @@ export const Mines = () => {
         if (currentResult === 'LOST' && prevResult.current === 'ACTIVE') {
             const audio = new Audio('/assets/sound/bomb_sound.mp3');
             audio.volume = 0.5;
-            audio.play().catch(() => { }); 
+            audio.play().catch(() => { });
         }
         else if (currentRevealedCount > prevRevealedCount.current) {
             if (currentResult !== 'LOST') {
                 const audio = new Audio('/assets/sound/diamond_sound.mp3');
                 audio.volume = 0.4;
-                audio.currentTime = 0;  
+                audio.currentTime = 0;
                 audio.play().catch(() => { });
             }
         }
@@ -76,7 +108,14 @@ export const Mines = () => {
     }, [gameState]);
 
     return (
-        <div className="flex flex-col lg:flex-row gap-8 max-w-[1200px] mx-auto p-4 lg:p-8 min-h-[600px] items-start justify-center animate-fade-in font-sans selection:bg-white selection:text-black">
+        <div className="flex flex-col lg:flex-row gap-8 max-w-[1200px] mx-auto p-4 lg:p-8 min-h-[600px] items-start justify-center animate-fade-in font-sans selection:bg-white selection:text-black relative">
+            <GameOverlay
+                isConnected={isConnected}
+                connect={connect}
+                gameId="mines"
+                gameTitle="Mines Protocol"
+                rules={MINES_RULES}
+            />
             {/* Control Panel - Pro / Technical */}
             <div className="w-full lg:w-[380px] bg-zinc-900/50 backdrop-blur-md rounded-3xl p-8 flex flex-col gap-8 shadow-2xl border border-zinc-800/50 relative overflow-hidden">
 
@@ -86,7 +125,7 @@ export const Mines = () => {
                         <span className="w-1 h-1 bg-white rounded-full animate-pulse"></span>
                         <span className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Grid Protocol</span>
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tighter text-white">Mines.</h2>
+                    <h2 className="text-3xl font-bold tracking-tighter text-white">Mines</h2>
                     <p className="text-zinc-500 text-sm">Navigate the entropy field.</p>
                 </div>
 

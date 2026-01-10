@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Pickaxe, Brain, ChevronRight, Zap, Cpu, Activity, ExternalLink, Database } from "lucide-react";
+import { Pickaxe, Brain, Grid3x3, ChevronRight, Zap, Cpu, Activity, ExternalLink, Database, Palette, Type } from "lucide-react";
 
 export const Home = () => {
     const navigate = useNavigate();
@@ -13,11 +13,35 @@ export const Home = () => {
             status: 'LIVE'
         },
         {
+            id: 'bingo',
+            title: 'Bingo',
+            description: '1v1 cross-chain battle. First to 5 lines wins the pot.',
+            icon: <Grid3x3 className="w-6 h-6 text-white" />,
+            path: '/games/bingo',
+            status: 'LIVE'
+        },
+        {
             id: 'memory',
             title: 'Memory Protocol',
             description: 'Pattern recognition sequencing. Prove your cognitive recall.',
             icon: <Brain className="w-6 h-6 text-white" />,
             path: '/games/memory',
+            status: 'LIVE'
+        },
+        {
+            id: 'color-trading',
+            title: 'Color Trading',
+            description: 'Predict the winning color. High-speed probability market.',
+            icon: <Palette className="w-6 h-6 text-white" />,
+            path: '/games/color-trading',
+            status: 'LIVE'
+        },
+        {
+            id: 'wordle',
+            title: 'Wordle',
+            description: 'Decentralized linguistic decryption. Guess the 5-letter sequence.',
+            icon: <Type className="w-6 h-6 text-white" />,
+            path: '/games/wordle',
             status: 'LIVE'
         }
     ];
@@ -62,18 +86,23 @@ export const Home = () => {
                 {/* Hero Content */}
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
                     <div className="space-y-10">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm animate-fade-in-up">
+                        <div
+                            onClick={() => navigate('/mining/faucets')}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm animate-fade-in-up cursor-pointer hover:bg-emerald-500/20 transition-colors"
+                        >
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
-                            <span className="text-xs font-mono font-bold text-zinc-300 tracking-wider">Linera AKINDO Wavehack</span>
+                            <span className="text-xs font-mono font-bold text-emerald-400 tracking-wider">
+                                Mint PulseTokens for Here
+                            </span>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-">
                             <h1 className="flex items-center gap-4 md:gap-6 text-7xl md:text-9xl font-black tracking-tighter text-white animate-fade-in-up delay-100 leading-[0.85]">
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-500">PulseBet</span>
-                                 <img src="/assets/logo/logo_png.png" alt="PulseBet" className="w-16 h-16 md:w-32 md:h-32 object-contain" />
+                                <img src="/assets/logo/logo_png.png" alt="PulseBet" className="w-16 h-16 md:w-32 md:h-32 object-contain" />
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">

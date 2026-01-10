@@ -1,8 +1,4 @@
 import { ethers } from "ethers";
-
-/**
- * A signer implementation that uses the MetaMask browser extension for signing.
- */
 export class MetaMask {
     public provider: ethers.BrowserProvider;
 
@@ -17,8 +13,6 @@ export class MetaMask {
         if (!window.ethereum) {
             throw new Error("MetaMask is not available");
         }
-
-        // Explicitly type the result and check for undefined
         const accounts = (await window.ethereum.request({
             method: "eth_requestAccounts",
         })) as string[];
@@ -32,7 +26,6 @@ export class MetaMask {
             throw new Error(`MetaMask is not connected with the requested owner: ${owner}`);
         }
 
-        // Encode message as hex string
         const msgHex = `0x${this.uint8ArrayToHex(value)}`;
 
         try {
@@ -60,9 +53,6 @@ export class MetaMask {
         }
     }
 
-    /**
-     * Returns the currently connected MetaMask account address.
-     */
     async address(): Promise<string> {
         const signer = await this.provider.getSigner();
         const address = await signer.getAddress();

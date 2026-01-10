@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Coins } from 'lucide-react';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
+import { GameOverlay } from '../../components/GameOverlay';
 
 export default function Faucets() {
-    const { balance, owner } = useLineraWallet();
+    const { balance, owner, connect } = useLineraWallet();
     const { tokenBalance, mint, isReady } = usePulseToken();
     const [loading, setLoading] = useState(false);
     const [tokenMintAmount, setTokenMintAmount] = useState('100');
@@ -148,6 +149,14 @@ export default function Faucets() {
                     </div>
                 </div>
             )}
+            {/* Wallet Integration Overlay */}
+            <GameOverlay
+                isConnected={!!owner}
+                connect={connect}
+                gameId="faucets"
+                gameTitle="Faucets"
+                rules={null}
+            />
         </div>
     );
 }

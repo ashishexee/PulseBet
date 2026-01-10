@@ -128,8 +128,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             })();
         } catch (e: any) {
             console.error("Connection Failed:", e);
-
-            // Auto-Recovery for Fatal Sync Errors
             const fatalErrors = [
                 "out of order",
                 "Blob not found",
@@ -153,35 +151,45 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     };
 
     const disconnect = useCallback(async () => {
-        console.log("Resetting Network...");
+        console.log("Resetting Network & Clearing Storage...");
         localStorage.clear();
+
+        const dbsToDelete = ['linera', 'linera_testnet', 'linera_db', 'linera-wasm'];
 
         try {
             if (window.indexedDB && window.indexedDB.databases) {
                 const dbs = await window.indexedDB.databases();
-                const promises = dbs.map(db => {
-                    if (db.name) {
-                        return new Promise<void>((resolve, reject) => {
-                            console.log("Deleting DB:", db.name);
-                            const req = window.indexedDB.deleteDatabase(db.name!);
-                            req.onsuccess = () => resolve();
-                            req.onerror = () => reject("Failed to delete " + db.name);
-                            req.onblocked = () => {
-                                console.warn("Delete blocked: " + db.name);
-                                resolve();
-                            };
-                        });
-                    }
-                    return Promise.resolve();
+                dbs.forEach(db => {
+                    if (db.name) dbsToDelete.push(db.name);
                 });
-                await Promise.all(promises);
             }
         } catch (e) {
-            console.warn("Could not clear IndexedDB:", e);
+            console.warn("Could not list databases, using default list", e);
         }
 
-        console.log("Reset Complete. Reloading...");
-        window.location.reload();
+        const uniqueDBs = [...new Set(dbsToDelete)];
+        const promises = uniqueDBs.map(name => {
+            return new Promise<void>((resolve) => {
+                console.log(`Deleting DB: ${name}`);
+                const req = window.indexedDB.deleteDatabase(name);
+                req.onsuccess = () => resolve();
+                req.onerror = () => {
+                    console.warn(`Failed to delete ${name}`);
+                    resolve(); // Resolve anyway to continue
+                };
+                req.onblocked = () => {
+                    console.warn(`Delete blocked: ${name} - Close other tabs!`);
+                    resolve();
+                };
+            });
+        });
+
+        await Promise.all(promises);
+
+        console.log("Reset Complete. Reloading in 500ms...");
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
     }, []);
 
     const getApplication = useCallback(async (applicationId: string) => {
