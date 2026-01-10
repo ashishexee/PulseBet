@@ -4,4 +4,6 @@
 /contracts/memory_game/target
 /contracts/color_trading/target
 /contracts/wordle/target
+/contracts/bingo/target
 /scripts/node_modules
+
