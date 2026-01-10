@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowRight, Brain, Zap, Target, Trophy, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface StakeScreenProps {
     onCreateGame: (stake: number) => Promise<void>;
