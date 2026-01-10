@@ -10,7 +10,7 @@ interface GameOverlayProps {
     rules: React.ReactNode;
 }
 
-export const GameOverlay = ({ isConnected, connect, gameId, gameTitle, rules }: GameOverlayProps) => {
+export const GameOverlay = ({ isConnected, gameId, gameTitle, rules }: GameOverlayProps) => {
     const [showRules, setShowRules] = useState(false);
     const [dontShowAgain, setDontShowAgain] = useState(false);
 
