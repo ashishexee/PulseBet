@@ -1,6 +1,6 @@
 <img src="assets/banner/banner.png" width="100%" alt="Banner" />
 
-**PulseBet** is the first real-time, provably fair betting platform built on the **Linera Layer-1** microchain protocol. It leverages Linera's multi-chain architecture to offer instant finality, practically zero latency, and transparent gaming logic.
+**PulseBet** is the first real-time, provably fair **Decentralized Gaming Ecosystem** built on the **Linera Layer-1** microchain protocol. It leverages Linera's multi-chain architecture to offer instant finality, practically zero latency, and transparent gaming logic.
 
 ## 🚀 Features
 

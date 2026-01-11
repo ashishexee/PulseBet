@@ -65,11 +65,12 @@ export const Home = () => {
     ];
 
     const contracts = [
-        { label: "Mines App ID", value: "ad533a6a0b76a32063870b2c5aa3d7b0b2ad90238e49b12e0b50a2c8ce2a866a" },
-        { label: "Memory App ID", value: "29ef89026ec56395492ba6fa3b95c1f6d76e46815a3c2110b282d219cfaebd60" },
-        { label: "Pulse Token ID", value: "8e7498a4564d33c50bc4a3053eba7b51a4f5e7085111dbcc7cd3efe6072a7961" },
-        { label: "Chain ID", value: "bee61fb9c9f6284b02609d6748d7c4423a0e191ff39018fc9e530b00b8134204" },
-        { label: "Node URL", value: "https://testnet-conway.linera.net" },
+        { label: "Pulse Token ID", value: import.meta.env.VITE_PULSE_TOKEN_APP_ID || "Not Configured" },
+        { label: "Mines App ID", value: import.meta.env.VITE_MINES_APP_ID || "Not Configured" },
+        { label: "Memory App ID", value: import.meta.env.VITE_MEMORY_GAME_APP_ID || "Not Configured" },
+        { label: "Color Trading App ID", value: import.meta.env.VITE_COLOR_TRADING_APP_ID || "Not Configured" },
+        { label: "Wordle App ID", value: import.meta.env.VITE_WORDLE_APP_ID || "Not Configured" }, // Note: .env has spaces around =, might need check
+        { label: "Bingo App ID", value: import.meta.env.VITE_BINGO_APP_ID || "Not Configured" },
     ];
 
     return (
@@ -106,8 +107,8 @@ export const Home = () => {
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">
-                                The first <strong className="text-white font-medium">real-time betting platform</strong> built on the Linera Layer-1 blockchain.
-                                Play fair, provably random games and earn <strong className="text-white font-medium">PulseToken</strong> with instant finality.
+                                Thep <strong className="text-white font-medium">Decentralized Gaming Ecosystem</strong> built on the Linera Layer-1 blockchain.
+                                Play fair, provably fair games and earn <strong className="text-white font-medium">PulseToken</strong> with instant finality.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4 animate-fade-in-up delay-300">
