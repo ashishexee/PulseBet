@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useLineraWallet } from './useLineraWallet';
-import { Log } from 'ethers';
 
 // Define our specific GameState for Dots and Boxes
 interface GameState {
