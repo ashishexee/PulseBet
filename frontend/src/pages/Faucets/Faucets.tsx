@@ -42,10 +42,10 @@ export default function Faucets() {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
                     {/* Linera Faucet Card */}
-                    <div className="group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                    <div className="lg:col-span-1 group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
                         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl pointer-events-none"></div>
 
                         <div className="h-full bg-black rounded-[20px] p-8 flex flex-col justify-between relative z-10">
@@ -71,7 +71,7 @@ export default function Faucets() {
                     </div>
 
                     {/* PulseToken Faucet Card */}
-                    <div className="group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                    <div className="lg:col-span-2 group relative bg-zinc-900 rounded-3xl p-1 border border-zinc-800 hover:border-zinc-700 transition-colors">
                         <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-3xl pointer-events-none"></div>
 
                         <div className="h-full bg-black rounded-[20px] p-8 flex flex-col justify-between relative z-10">

@@ -9,7 +9,7 @@ interface GameState {
     gridSize: number;
     horizontalLines: Line[];
     verticalLines: Line[];
-    squares: Record<string, string>; // "r,c" -> owner
+    squares: Record<string, string>; 
     status: 'Lobby' | 'Active' | 'Finished';
     scores: [number, number];
     winner: string | null;

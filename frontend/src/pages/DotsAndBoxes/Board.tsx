@@ -1,11 +1,5 @@
 import React from 'react';
 
-// Types for props
-interface Line {
-    start: { r: number; c: number };
-    end: { r: number; c: number };
-}
-
 interface BoardProps {
     gridSize: number; // e.g. 8 for 8x8 dots
     horizontalLines: Map<string, string>; // Format: "r,c" -> color
@@ -22,7 +16,6 @@ export const Board: React.FC<BoardProps> = ({
     verticalLines,
     squares,
     onLineClick,
-    currentTurnColor,
     interactive
 }) => {
     // Generate grid coordinates
