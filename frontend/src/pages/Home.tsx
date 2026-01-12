@@ -43,6 +43,14 @@ export const Home = () => {
             icon: <Type className="w-6 h-6 text-white" />,
             path: '/games/wordle',
             status: 'LIVE'
+        },
+         {
+            id: 'dots_and_boxes',
+            title: 'Dots and Boxes',
+            description: 'Decentralized grid conquest. Draw lines, complete boxes, outscore your opponent.',
+            icon: <Type className="w-6 h-6 text-white" />,
+            path: '/games/dots-and-boxes',
+            status: 'LIVE'
         }
     ];
 
