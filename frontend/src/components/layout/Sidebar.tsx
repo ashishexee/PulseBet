@@ -29,9 +29,6 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
 
     return (
         <div className={`h-full bg-zinc-900 flex flex-col py-6 border-r border-zinc-800 shrink-0 transition-all duration-300 w-full`}>
-
-
-
             <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-4'}`}>
                 <ul className="space-y-2">
                     {navItems.map((item, index) => (

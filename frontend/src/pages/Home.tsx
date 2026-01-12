@@ -107,7 +107,7 @@ export const Home = () => {
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">
-                                Thep <strong className="text-white font-medium">Decentralized Gaming Ecosystem</strong> built on the Linera Layer-1 blockchain.
+                                The <strong className="text-white font-medium">Decentralized Gaming Ecosystem</strong> built on the Linera Layer-1 blockchain.
                                 Play fair, provably fair games and earn <strong className="text-white font-medium">PulseToken</strong> with instant finality.
                             </p>
 
