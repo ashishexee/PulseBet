@@ -22,7 +22,8 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
         { icon: <Grid3x3 size={20} />, label: 'Bingo', path: '/games/bingo' },
         { icon: <Brain size={20} />, label: 'Memory', path: '/games/memory' },
         { icon: <Palette size={20} />, label: 'Color Trading', path: '/games/color-trading' },
-        { icon: <KeyboardIcon size={20} />, label: 'Wordle', path: '/games/wordle' }
+        { icon: <KeyboardIcon size={20} />, label: 'Wordle', path: '/games/wordle' },
+        { icon: <Grid3x3 size={20} />, label: 'Dots & Boxes', path: '/games/dots-and-boxes' }
     ];
 
     const isActive = (path?: string) => path && location.pathname === path;

@@ -8,8 +8,8 @@ interface Line {
 
 interface BoardProps {
     gridSize: number; // e.g. 8 for 8x8 dots
-    horizontalLines: Set<string>; // Format: "r,c" where line is from (r,c) to (r,c+1)
-    verticalLines: Set<string>;   // Format: "r,c" where line is from (r,c) to (r+1,c)
+    horizontalLines: Map<string, string>; // Format: "r,c" -> color
+    verticalLines: Map<string, string>;   // Format: "r,c" -> color
     squares: Map<string, string>; // Format: "r,c" -> ownerId (color/address)
     onLineClick: (orientation: 'h' | 'v', r: number, c: number) => void;
     currentTurnColor: string;
@@ -40,8 +40,8 @@ export const Board: React.FC<BoardProps> = ({
     };
 
     // Helper to check if line is drawn
-    const isHorizontalDrawn = (r: number, c: number) => horizontalLines.has(`${r},${c}`);
-    const isVerticalDrawn = (r: number, c: number) => verticalLines.has(`${r},${c}`);
+    const getHLineColor = (r: number, c: number) => horizontalLines.get(`${r},${c}`);
+    const getVLineColor = (r: number, c: number) => verticalLines.get(`${r},${c}`);
 
     return (
         <div className="flex items-center justify-center p-8 bg-black/20 rounded-3xl border border-zinc-800">
@@ -73,7 +73,8 @@ export const Board: React.FC<BoardProps> = ({
                     {/* Horizontal Lines */}
                     {rows.map((r) =>
                         Array.from({ length: gridSize - 1 }).map((_, c) => {
-                            const isDrawn = isHorizontalDrawn(r, c);
+                            const color = getHLineColor(r, c);
+                            const isDrawn = !!color;
                             return (
                                 <rect
                                     key={`h-${r}-${c}`}
@@ -81,7 +82,7 @@ export const Board: React.FC<BoardProps> = ({
                                     y={r * GAP - 4}
                                     width={GAP - DOT_RADIUS * 2}
                                     height={8}
-                                    fill={isDrawn ? 'white' : 'transparent'}
+                                    fill={color || 'transparent'}
                                     className={`
                                         transition-all duration-200
                                         ${!isDrawn && interactive ? 'cursor-pointer hover:fill-zinc-600/50' : ''}
@@ -96,7 +97,8 @@ export const Board: React.FC<BoardProps> = ({
                     {/* Vertical Lines */}
                     {Array.from({ length: gridSize - 1 }).map((_, r) =>
                         cols.map((c) => {
-                            const isDrawn = isVerticalDrawn(r, c);
+                            const color = getVLineColor(r, c);
+                            const isDrawn = !!color;
                             return (
                                 <rect
                                     key={`v-${r}-${c}`}
@@ -104,7 +106,7 @@ export const Board: React.FC<BoardProps> = ({
                                     y={r * GAP + DOT_RADIUS}
                                     width={8}
                                     height={GAP - DOT_RADIUS * 2}
-                                    fill={isDrawn ? 'white' : 'transparent'}
+                                    fill={color || 'transparent'}
                                     className={`
                                         transition-all duration-200
                                         ${!isDrawn && interactive ? 'cursor-pointer hover:fill-zinc-600/50' : ''}
