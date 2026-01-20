@@ -4,7 +4,8 @@ import {
     Brain,
     Palette,
     Keyboard as KeyboardIcon,
-    Grid3x3
+    Grid3x3,
+    ArrowDownCircle
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -19,6 +20,7 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
     const navItems = [
         { icon: <Pickaxe size={20} />, label: 'Mines', path: '/games/mining' },
         { icon: <Coins size={20} />, label: 'Faucets', path: '/mining/faucets' },
+        { icon: <ArrowDownCircle size={20} />, label: 'Plinko', path: '/games/plinko' },
         { icon: <Grid3x3 size={20} />, label: 'Bingo', path: '/games/bingo' },
         { icon: <Brain size={20} />, label: 'Memory', path: '/games/memory' },
         { icon: <Palette size={20} />, label: 'Color Trading', path: '/games/color-trading' },

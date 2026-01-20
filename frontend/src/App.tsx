@@ -8,6 +8,7 @@ import { ColorTrading } from './pages/ColorTrading';
 import { Wordle } from './pages/Wordle';
 import { DotsAndBoxesGame } from './pages/DotsAndBoxes/Game';
 import Faucets from './pages/Faucets/Faucets';
+import { Plinko } from './pages/Plinko/Plinko';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/games/mining" element={<Mines />} />
           <Route path="/games/bingo" element={<Bingo />} />
+          <Route path="/games/plinko" element={<Plinko />} />
           <Route path="/games/memory" element={<MemoryGame />} />
           <Route path="/games/color-trading" element={<ColorTrading />} />
           <Route path="/games/wordle" element={<Wordle />} />
