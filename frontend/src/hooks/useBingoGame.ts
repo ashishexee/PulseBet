@@ -57,7 +57,11 @@ export const useBingoGame = () => {
         setLoading(true);
         setLastError(null);
         try {
-            await executeMutation(`mutation { createGame(playerName: "${playerName}") }`);
+            const mutation = `mutation { createGame(playerName: "${playerName}") }`;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: chainId });
             await refreshState();
         } finally {
             setLoading(false);
@@ -68,7 +72,11 @@ export const useBingoGame = () => {
         setLoading(true);
         setLastError(null);
         try {
-            await executeMutation(`mutation { joinGame(hostChainId: "${hostChainId}", playerName: "${playerName}") }`);
+            const mutation = `mutation { joinGame(hostChainId: "${hostChainId}", playerName: "${playerName}") }`;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: chainId });
             await refreshState();
         } finally {
             setLoading(false);

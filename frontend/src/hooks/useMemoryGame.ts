@@ -130,7 +130,10 @@ export const useMemoryGame = () => {
       }`;
 
             console.log('🎮 Creating game with mutation:', mutation);
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(MEMORY_GAME_APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
 
             console.log('⏳ Waiting for game to become active...');
             const gameFound = await waitForGameActive(10, 1000);
@@ -149,7 +152,7 @@ export const useMemoryGame = () => {
         } finally {
             setLoading(false);
         }
-    }, [owner, executeQuery, waitForGameActive, fetchCards]);
+    }, [owner, client, chainId, waitForGameActive, fetchCards]);
     const revealCard = useCallback(async (cardId: number): Promise<CardRevealResponse | null> => {
         setLoading(true);
         setError(null);

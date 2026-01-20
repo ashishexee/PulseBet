@@ -83,7 +83,10 @@ export const usePlinkoGame = () => {
             startGame(amount: ${Math.floor(amount)}, owner: "${owner}")
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await refreshState();
         } catch (e) {
             console.error("Start failed:", e);
@@ -94,9 +97,6 @@ export const usePlinkoGame = () => {
 
     const advanceBatch = async (targetRow: number) => {
         if (!APP_ID) return;
-        // We don't necessarily block UI for this, to allow animation flow?
-        // But let's set loading to be safe.
-        // setLoading(true); 
         const mutation = `mutation {
             advanceBatch(targetRow: ${targetRow})
         }`;

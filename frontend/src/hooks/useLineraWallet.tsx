@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, createContext, useContext, useRef } from 'react';
-
 import { initialize, Client, Faucet } from "@linera/client";
+import * as linera from "@linera/client";
 
 interface LineraWalletContextType {
     isReady: boolean;
@@ -8,6 +8,7 @@ interface LineraWalletContextType {
     isConnecting: boolean;
     chainId: string | null;
     owner: string | null;
+    autosignerOwner: string | null;
     balance: string | null;
     client: any | null;
     getApplication: (applicationId: string) => Promise<any>;
@@ -24,6 +25,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [owner, setOwner] = useState<string | null>(null);
+    const [autosignerOwner, setAutosignerOwner] = useState<string | null>(null);
     const [chainId, setChainId] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -68,6 +70,55 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             setIsReady(true);
             console.log("Linera WASM initialized");
 
+            const storedChainId = localStorage.getItem("linera_chain_id");
+            const storedOwner = localStorage.getItem("linera_owner");
+
+            if (storedChainId && storedOwner) {
+                console.log("Found previous session, auto-reconnecting...");
+                try {
+                    const { MetaMask } = await import('../utils/metamask');
+                    const metaMaskSigner = new MetaMask();
+                    const faucet = new Faucet(import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net");
+                    const wallet = await faucet.createWallet();
+
+                    const autosigner = linera.signer.PrivateKey.createRandom();
+                    const autosignerAddr = autosigner.address();
+
+                    const compositeSigner = new linera.signer.Composite(autosigner, metaMaskSigner);
+                    const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
+                    const nodeUrl = envUrl || "https://testnet-conway.linera.net";
+                    const options = { validators: [nodeUrl] };
+                    const newClient = await new Client(wallet, compositeSigner, options as any);
+
+                    setOwner(storedOwner);
+                    setAutosignerOwner(autosignerAddr);
+                    setChainId(storedChainId);
+                    clientRef.current = newClient;
+                    setClientInstance(newClient);
+                    setIsConnected(true);
+                    console.log("✅ Auto-reconnected with fresh autosigner!");
+
+                    try {
+                        const chainHandle = await newClient.chain(storedChainId);
+                        await chainHandle.addOwner(autosigner.address());
+                        wallet.setOwner(storedChainId, autosigner.address());
+                    } catch (ownerErr) {
+                        console.warn("Could not register autosigner:", ownerErr);
+                    }
+
+                    try {
+                        const chainHandle = await newClient.chain(storedChainId);
+                        const bal = await chainHandle.balance();
+                        setBalance(bal?.toString() || "0");
+                    } catch (e) {
+                        console.warn("Balance fetch failed:", e);
+                    }
+                } catch (reconnectErr) {
+                    console.warn("Auto-reconnect failed:", reconnectErr);
+                    localStorage.removeItem("linera_owner");
+                }
+            }
+
         } catch (e: any) {
             console.error("Initialization Failed:", e);
             setError(e.message || "Failed to initialize wallet");
@@ -85,34 +136,53 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             console.log("Connecting with MetaMask...");
 
             const { MetaMask } = await import('../utils/metamask');
-            const signer = new MetaMask();
+            const metaMaskSigner = new MetaMask();
 
-            const addr = await signer.address();
-            console.log("MetaMask Address:", addr);
-            setOwner(addr);
+            const metaMaskAddr = await metaMaskSigner.address();
+            console.log("MetaMask Address:", metaMaskAddr);
+            setOwner(metaMaskAddr);
 
             const defaultProxy = typeof window !== 'undefined' ? window.location.origin + "/faucet-proxy" : "https://faucet.testnet-conway.linera.net";
             const faucetUrl = import.meta.env.VITE_LINERA_FAUCET_URL || defaultProxy;
             const faucet = new Faucet(faucetUrl);
             const wallet = await faucet.createWallet();
 
-            const chain = await faucet.claimChain(wallet, addr);
+            const chain = await faucet.claimChain(wallet, metaMaskAddr);
+            localStorage.setItem("linera_owner", metaMaskAddr);
             localStorage.setItem("linera_chain_id", chain);
             console.log("Chain ID:", chain);
 
             setChainId(chain);
 
-            console.log("Initializing Client...");
+            console.log("Creating autosigner for background operations...");
+            const autosigner = linera.signer.PrivateKey.createRandom();
+            const autosignerAddr = autosigner.address();
+            console.log("Autosigner Address:", autosignerAddr);
+            setAutosignerOwner(autosignerAddr);
+
+            console.log("Initializing Client with Composite Signer...");
             const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
             const nodeUrl = envUrl || "https://testnet-conway.linera.net";
 
             const options = { validators: [nodeUrl] };
-            const newClient = await new Client(wallet, signer, options as any);
+            const compositeSigner = new linera.signer.Composite(autosigner, metaMaskSigner);
+            const newClient = await new Client(wallet, compositeSigner, options as any);
 
             clientRef.current = newClient;
             setClientInstance(newClient);
             setIsConnected(true);
-            console.log("Client Ready!");
+            console.log("Client Ready with Composite Signer!");
+
+            try {
+                console.log("Registering autosigner as chain owner...");
+                const chainHandle = await newClient.chain(chain);
+                chainHandle.addOwner(autosigner.address());
+                wallet.setOwner(chain, autosigner.address());
+                console.log("Autosigner registered and set as default owner");
+                console.log("MetaMask owner (for user mutations):", metaMaskAddr);
+            } catch (ownerErr) {
+                console.warn("Could not register autosigner as owner (non-fatal):", ownerErr);
+            }
 
             (async () => {
                 if (chain && newClient) {
@@ -185,7 +255,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
         });
 
         await Promise.all(promises);
-
         console.log("Reset Complete. Reloading in 500ms...");
         setTimeout(() => {
             window.location.reload();
@@ -222,6 +291,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             isConnecting,
             chainId,
             owner,
+            autosignerOwner,
             balance,
             client: clientInstance,
             getApplication,
