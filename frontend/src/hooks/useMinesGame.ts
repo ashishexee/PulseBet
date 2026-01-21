@@ -139,7 +139,10 @@ export const useMinesGame = () => {
             cashOut
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await refreshState();
         } catch (e) {
             // console.error("Cashout failed:", e);

@@ -29,7 +29,7 @@ interface CardRevealResponse {
 }
 
 export const useMemoryGame = () => {
-    const { client, chainId, owner } = useLineraWallet();
+    const { client, chainId, owner, autosignerOwner } = useLineraWallet();
     const [gameState, setGameState] = useState<Game | null>(null);
     const [cards, setCards] = useState<Card[]>([]);
     const [loading, setLoading] = useState(false);
@@ -161,7 +161,13 @@ export const useMemoryGame = () => {
             const mutation = `mutation {
         revealCard(cardId: ${cardId})
       }`;
-            const result = await executeQuery(mutation);
+            if (!client || !chainId || !MEMORY_GAME_APP_ID || !autosignerOwner) throw new Error("Wallet not fully connected");
+            const chain = await client.chain(chainId);
+            const app = await chain.application(MEMORY_GAME_APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            const responseJson = await app.query(requestBody, { owner: autosignerOwner });
+            const response = JSON.parse(responseJson);
+            const result = response.data;
             if (!result) {
                 throw new Error("Transaction cancelled or failed");
             }
@@ -207,7 +213,11 @@ export const useMemoryGame = () => {
         claimPayout
       }`;
 
-            await executeQuery(mutation);
+            if (!client || !chainId || !MEMORY_GAME_APP_ID || !owner) throw new Error("Wallet not connected");
+            const chain = await client.chain(chainId);
+            const app = await chain.application(MEMORY_GAME_APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await fetchGame();
         } catch (err: any) {
             console.error('Claim payout error:', err);

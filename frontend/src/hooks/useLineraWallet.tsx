@@ -4,6 +4,7 @@ import * as linera from "@linera/client";
 
 interface LineraWalletContextType {
     isReady: boolean;
+    isSyncing: boolean;
     isConnected: boolean;
     isConnecting: boolean;
     chainId: string | null;
@@ -22,12 +23,13 @@ const LineraWalletContext = createContext<LineraWalletContextType | undefined>(u
 
 export const LineraWalletProvider = ({ children }: { children: React.ReactNode }) => {
     const [isReady, setIsReady] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [owner, setOwner] = useState<string | null>(null);
     const [autosignerOwner, setAutosignerOwner] = useState<string | null>(null);
     const [chainId, setChainId] = useState<string | null>(null);
-    const [balance, setBalance] = useState<string | null>(null);
+    const [balance, setBalance] = useState<string | null>(localStorage.getItem("linera_balance"));
     const [error, setError] = useState<string | null>(null);
 
     const [clientInstance, setClientInstance] = useState<any>(null);
@@ -40,7 +42,9 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
         try {
             const chain = await clientRef.current.chain(chainId);
             const bal = await chain.balance();
-            setBalance(bal?.toString() || "0");
+            const balStr = bal?.toString() || "0";
+            setBalance(balStr);
+            localStorage.setItem("linera_balance", balStr);
         } catch (e) {
             console.warn("Client fetch failed:", e);
         }
@@ -74,19 +78,37 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             const storedOwner = localStorage.getItem("linera_owner");
 
             if (storedChainId && storedOwner) {
-                console.log("Found previous session, auto-reconnecting...");
+                console.log("Found previous session, restoring wallet...");
                 try {
-                    const { MetaMask } = await import('../utils/metamask');
-                    const metaMaskSigner = new MetaMask();
+                    const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
+                    const nodeUrl = envUrl || "https://testnet-conway.linera.net";
                     const faucet = new Faucet(import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net");
-                    const wallet = await faucet.createWallet();
 
-                    const autosigner = linera.signer.PrivateKey.createRandom();
+                    // Parallelize heavy imports and IO
+                    const [{ MetaMask }, wallet] = await Promise.all([
+                        import('../utils/metamask'),
+                        faucet.createWallet()
+                    ]);
+
+                    const metaMaskSigner = new MetaMask();
+
+                    const storedAutosignerKey = localStorage.getItem("linera_autosigner_key");
+                    let autosigner;
+                    let isReused = false;
+
+                    if (storedAutosignerKey) {
+                        // Reconstruct key directly from stored secret string
+                        autosigner = new linera.signer.PrivateKey(storedAutosignerKey);
+                        isReused = true;
+                        console.log("Restored persistent autosigner");
+                    } else {
+                        // Fallback (should rarely happen if flow is correct)
+                        autosigner = linera.signer.PrivateKey.createRandom();
+                    }
+
                     const autosignerAddr = autosigner.address();
 
                     const compositeSigner = new linera.signer.Composite(autosigner, metaMaskSigner);
-                    const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
-                    const nodeUrl = envUrl || "https://testnet-conway.linera.net";
                     const options = { validators: [nodeUrl] };
                     const newClient = await new Client(wallet, compositeSigner, options as any);
 
@@ -96,22 +118,28 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
                     clientRef.current = newClient;
                     setClientInstance(newClient);
                     setIsConnected(true);
-                    console.log("✅ Auto-reconnected with fresh autosigner!");
+                    setIsSyncing(true);
+                    console.log("✅ Auto-reconnected! Syncing blockchain state...");
 
-                    try {
-                        const chainHandle = await newClient.chain(storedChainId);
-                        await chainHandle.addOwner(autosigner.address());
+                    const chainHandle = await newClient.chain(storedChainId);
+                    const bal = await chainHandle.balance();
+                    setBalance(bal?.toString() || "0");
+                    setIsSyncing(false);
+                    console.log("✅ Balance loaded, system ready!", bal);
+
+                    if (!isReused) {
+                        (async () => {
+                            try {
+                                await chainHandle.addOwner(autosigner.address());
+                                wallet.setOwner(storedChainId, autosigner.address());
+                                console.log("New autosigner registered");
+                            } catch (ownerErr) {
+                                console.warn("Could not register autosigner:", ownerErr);
+                            }
+                        })();
+                    } else {
+                        // Just ensure local wallet knows about it, no chain mutation needed
                         wallet.setOwner(storedChainId, autosigner.address());
-                    } catch (ownerErr) {
-                        console.warn("Could not register autosigner:", ownerErr);
-                    }
-
-                    try {
-                        const chainHandle = await newClient.chain(storedChainId);
-                        const bal = await chainHandle.balance();
-                        setBalance(bal?.toString() || "0");
-                    } catch (e) {
-                        console.warn("Balance fetch failed:", e);
                     }
                 } catch (reconnectErr) {
                     console.warn("Auto-reconnect failed:", reconnectErr);
@@ -156,6 +184,11 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
 
             console.log("Creating autosigner for background operations...");
             const autosigner = linera.signer.PrivateKey.createRandom();
+            // @ts-ignore - Accessing private/protected property for persistence
+            const secretKey = autosigner.secret;
+            if (secretKey) {
+                localStorage.setItem("linera_autosigner_key", secretKey);
+            }
             const autosignerAddr = autosigner.address();
             console.log("Autosigner Address:", autosignerAddr);
             setAutosignerOwner(autosignerAddr);
@@ -287,6 +320,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
     return (
         <LineraWalletContext.Provider value={{
             isReady,
+            isSyncing,
             isConnected,
             isConnecting,
             chainId,

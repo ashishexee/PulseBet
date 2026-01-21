@@ -25,7 +25,7 @@ export interface GameRoom {
 }
 
 export const useBingoGame = () => {
-    const { client, chainId, isConnected } = useLineraWallet();
+    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
     const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
     const [loading, setLoading] = useState(false);
     const [lastError, setLastError] = useState<string | null>(null);
@@ -35,21 +35,6 @@ export const useBingoGame = () => {
     // --- Helpers ---
 
 
-    const executeMutation = useCallback(async (mutation: string) => {
-        if (!client || !chainId || !APP_ID) return null;
-        try {
-            const chain = await client.chain(chainId);
-            const app = await chain.application(APP_ID);
-            const responseJson = await app.query(JSON.stringify({ query: mutation }));
-            const response = JSON.parse(responseJson);
-            if (response.errors) throw new Error(response.errors[0].message);
-            return response.data;
-        } catch (e: any) {
-            console.error("GraphQL Mutation Error:", e);
-            setLastError(e.message || "Operation failed");
-            throw e;
-        }
-    }, [client, chainId, APP_ID]);
 
     // --- Actions ---
 
@@ -61,7 +46,7 @@ export const useBingoGame = () => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner: chainId });
+            await app.query(requestBody, { owner });
             await refreshState();
         } finally {
             setLoading(false);
@@ -76,7 +61,7 @@ export const useBingoGame = () => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner: chainId });
+            await app.query(requestBody, { owner });
             await refreshState();
         } finally {
             setLoading(false);
@@ -86,8 +71,13 @@ export const useBingoGame = () => {
     const pickNumber = async (number: number) => {
         setLoading(true);
         setLastError(null);
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         try {
-            await executeMutation(`mutation { pickNumber(number: ${number}) }`);
+            const mutation = `mutation { pickNumber(number: ${number}) }`;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             // Optimistic update could happen here, but we'll wait for polling/event
             await refreshState();
         } finally {
@@ -97,8 +87,13 @@ export const useBingoGame = () => {
 
     const leaveGame = async () => {
         setLoading(true);
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         try {
-            await executeMutation(`mutation { leaveGame }`);
+            const mutation = `mutation { leaveGame }`;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             setGameRoom(null);
         } finally {
             setLoading(false);
@@ -110,8 +105,13 @@ export const useBingoGame = () => {
         if (!confirmed) return;
 
         setLoading(true);
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         try {
-            await executeMutation(`mutation { hardReset }`);
+            const mutation = `mutation { hardReset }`;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             setGameRoom(null);
         } finally {
             setLoading(false);

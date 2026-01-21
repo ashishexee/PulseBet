@@ -2,18 +2,32 @@ import { useNavigate } from "react-router-dom";
 import { Menu, Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
     toggleSidebar: () => void;
 }
 
 export function Header({ toggleSidebar }: HeaderProps) {
-    const { isConnected, connect, disconnect, chainId, balance, owner } = useLineraWallet();
+    const { isConnected, connect, disconnect, chainId, balance, owner, isSyncing } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [copiedChainId, setCopiedChainId] = useState(false);
+    const [showStatus, setShowStatus] = useState(true);
+
+    const isLoading = isSyncing || !balance;
+
+    useEffect(() => {
+        if (!isLoading) {
+            const timer = setTimeout(() => {
+                setShowStatus(false);
+            }, 10000);
+            return () => clearTimeout(timer);
+        } else {
+            setShowStatus(true);
+        }
+    }, [isLoading]);
 
     const copyToClipboard = async (text: string, type: 'address' | 'chainId') => {
         try {
@@ -42,6 +56,16 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     </span>
                 </div>
             </div>
+
+            {/* Center Status Indicator */}
+            {showStatus && isConnected && (
+                <div className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full ${isLoading ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-green-500/20 border border-green-500/30'}`}>
+                    <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
+                    <span className={`text-xs font-bold ${isLoading ? 'text-yellow-400' : 'text-green-400'}`}>
+                        {isLoading ? 'Connecting...' : '✓ Ready to Play!'}
+                    </span>
+                </div>
+            )}
 
             <div className="flex items-center gap-4">
                 {isConnected ? (
