@@ -209,7 +209,7 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
             try {
                 console.log("Registering autosigner as chain owner...");
                 const chainHandle = await newClient.chain(chain);
-                chainHandle.addOwner(autosigner.address());
+                await chainHandle.addOwner(autosigner.address());
                 wallet.setOwner(chain, autosigner.address());
                 console.log("Autosigner registered and set as default owner");
                 console.log("MetaMask owner (for user mutations):", metaMaskAddr);
@@ -255,7 +255,12 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
 
     const disconnect = useCallback(async () => {
         console.log("Resetting Network & Clearing Storage...");
-        localStorage.clear();
+        // Only clear Linera-related keys to preserve user preferences (like rule overlays)
+        localStorage.removeItem("linera_chain_id");
+        localStorage.removeItem("linera_owner");
+        localStorage.removeItem("linera_autosigner_key");
+        localStorage.removeItem("linera_balance");
+        localStorage.removeItem("linera_db_version"); // If used
 
         const dbsToDelete = ['linera', 'linera_testnet', 'linera_db', 'linera-wasm'];
 

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { usePlinkoGame } from '../../hooks/usePlinkoGame';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
@@ -7,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const ROWS = 8;
 const CHECKPOINTS = [1, 3, 5, 7, 8];
-const MULTIPLIERS = [7.77, 0.1, 1.0, 0.05, 0.33, 0.05, 1.0, 0.1, 7.77];
+const MULTIPLIERS = [10.0, 0.25, 1.5, 0.5, 2.5, 0.5, 1.5, 0.25, 10.0];
 
 const PLINKO_RULES = (
     <div className="space-y-4">
@@ -34,6 +36,7 @@ export const Plinko = () => {
     const { gameState, loading: gameLoading, startGame, advanceBatch } = usePlinkoGame();
     const { isConnected, connect } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
+    const navigate = useNavigate();
 
     const [betAmount, setBetAmount] = useState<number>(0);
 
@@ -126,7 +129,7 @@ export const Plinko = () => {
                         <div className="flex-1 px-3 py-2">
                             <input
                                 type="number"
-                                value={betAmount}
+                                value={betAmount === 0 ? '' : betAmount}
                                 onChange={(e) => setBetAmount(Math.max(0, parseFloat(e.target.value) || 0))}
                                 disabled={isGameActive}
                                 className="bg-transparent text-white font-mono font-bold text-2xl w-full outline-none placeholder-zinc-800"
@@ -164,7 +167,32 @@ export const Plinko = () => {
                         Simulating Path...
                     </button>
                 ) : (
-                    <button onClick={() => startGame(betAmount)} disabled={gameLoading || betAmount <= 0} className="w-full bg-white hover:bg-zinc-100 text-black font-black py-5 rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-sm flex items-center justify-center gap-3">
+                    <button onClick={() => {
+                        const currentBalance = parseFloat(tokenBalance || '0');
+                        if (betAmount <= 0) {
+                            toast.error("Invalid Stake", {
+                                description: "Please enter a bet amount greater than 0.",
+                                duration: 3000,
+                            });
+                            return;
+                        }
+                        if (betAmount > currentBalance) {
+                            toast.error("Insufficient Funds", {
+                                description: "You don't have enough PulseTokens for this bet.",
+                                action: {
+                                    label: "Mint Tokens",
+                                    onClick: () => navigate('/mining/faucets')
+                                },
+                                cancel: {
+                                    label: "Cancel",
+                                    onClick: () => { }
+                                },
+                                duration: 5000,
+                            });
+                            return;
+                        }
+                        startGame(betAmount);
+                    }} disabled={gameLoading} className="w-full bg-white hover:bg-zinc-100 text-black font-black py-5 rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-sm flex items-center justify-center gap-3">
                         {gameLoading ? "INITIALIZING..." : (
                             <>
                                 <span>DROP CORE</span>

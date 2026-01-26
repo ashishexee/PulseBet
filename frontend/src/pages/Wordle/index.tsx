@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useWordle } from '../../hooks/useWordle';
 import { Grid } from './components/Grid';
 import { Keyboard } from './components/Keyboard';
@@ -42,20 +43,20 @@ export const Wordle: React.FC = () => {
     const { isConnected, connect } = useLineraWallet();
     const [currentGuess, setCurrentGuess] = useState("");
 
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    // const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const handleChar = useCallback((char: string) => {
         if (gameSession?.isOver) return;
         if (currentGuess.length < 5) {
             setCurrentGuess(prev => prev + char);
-            setErrorMsg(null);
+            // setErrorMsg(null);
         }
     }, [currentGuess, gameSession]);
 
     const handleDelete = useCallback(() => {
         if (gameSession?.isOver) return;
         setCurrentGuess(prev => prev.slice(0, -1));
-        setErrorMsg(null);
+        // setErrorMsg(null);
     }, [gameSession]);
 
     const handleEnter = useCallback(async () => {
@@ -70,11 +71,9 @@ export const Wordle: React.FC = () => {
         } catch (e: any) {
             console.error("Submission error:", e);
             if (e.message && e.message.includes("Word not in dictionary")) {
-                setErrorMsg("NOT A VALID WORD");
-                setTimeout(() => setErrorMsg(null), 3000);
+                toast.error("Not a Valid Word");
             } else {
-                setErrorMsg("TRANSACTION FAILED");
-                setTimeout(() => setErrorMsg(null), 3000);
+                toast.error("Transaction Failed");
             }
         }
     }, [currentGuess, gameSession, submitGuess]);
@@ -108,7 +107,7 @@ export const Wordle: React.FC = () => {
                 <div className="flex-1 flex flex-col items-center justify-center w-full max-w-7xl px-4 z-10 relative">
                     <div className="w-full max-w-lg flex flex-col items-center">
                         <div className="mb-8 text-center space-y-4 relative w-full">
-                            {errorMsg && (
+                            {/* errorMsg && (
                                 <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-max px-6 py-3 bg-red-500/10 border border-red-500/20 backdrop-blur-xl rounded-full text-red-500 font-bold tracking-widest text-xs animate-in slide-in-from-top-4 shadow-2xl flex items-center gap-2 z-50">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -116,7 +115,7 @@ export const Wordle: React.FC = () => {
                                     </span>
                                     {errorMsg}
                                 </div>
-                            )}
+                            ) */}
 
                             <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none">
                                 <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-600">Wordle</span>

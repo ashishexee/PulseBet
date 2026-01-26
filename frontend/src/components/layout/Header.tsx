@@ -3,31 +3,27 @@ import { Menu, Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface HeaderProps {
     toggleSidebar: () => void;
 }
 
 export function Header({ toggleSidebar }: HeaderProps) {
-    const { isConnected, connect, disconnect, chainId, balance, owner, isSyncing } = useLineraWallet();
+    const { isConnected, connect, disconnect, chainId, balance, owner, isConnecting } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [copiedChainId, setCopiedChainId] = useState(false);
-    const [showStatus, setShowStatus] = useState(true);
+    const [toastId, setToastId] = useState<string | number | null>(null);
 
-    const isLoading = isSyncing || !balance;
-
+    // Dismiss toast when connection process is fully complete (success or fail)
     useEffect(() => {
-        if (!isLoading) {
-            const timer = setTimeout(() => {
-                setShowStatus(false);
-            }, 10000);
-            return () => clearTimeout(timer);
-        } else {
-            setShowStatus(true);
+        if (!isConnecting && toastId) {
+            toast.dismiss(toastId);
+            setToastId(null);
         }
-    }, [isLoading]);
+    }, [isConnecting, toastId]);
 
     const copyToClipboard = async (text: string, type: 'address' | 'chainId') => {
         try {
@@ -57,15 +53,7 @@ export function Header({ toggleSidebar }: HeaderProps) {
                 </div>
             </div>
 
-            {/* Center Status Indicator */}
-            {showStatus && isConnected && (
-                <div className={`absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full ${isLoading ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-green-500/20 border border-green-500/30'}`}>
-                    <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
-                    <span className={`text-xs font-bold ${isLoading ? 'text-yellow-400' : 'text-green-400'}`}>
-                        {isLoading ? 'Connecting...' : '✓ Ready to Play!'}
-                    </span>
-                </div>
-            )}
+            {/* Center Status Indicator - Removed per user request */}
 
             <div className="flex items-center gap-4">
                 {isConnected ? (
@@ -116,11 +104,19 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     </div>
                 ) : (
                     <button
-                        onClick={connect}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all transform active:scale-95"
+                        onClick={() => {
+                            connect();
+                            const id = toast.info("Wallet Connection Initiated", {
+                                description: "Please confirm the autosigner authorization in MetaMask to proceed.",
+                                duration: 8000,
+                            });
+                            setToastId(id);
+                        }}
+                        disabled={isConnecting}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         <Wallet className="w-4 h-4" />
-                        <span>Connect Metamask</span>
+                        <span>{isConnecting ? "Connecting..." : "Connect Metamask"}</span>
                     </button>
                 )}
             </div>

@@ -46,7 +46,7 @@ export const useBingoGame = () => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } finally {
             setLoading(false);
@@ -61,7 +61,7 @@ export const useBingoGame = () => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } finally {
             setLoading(false);

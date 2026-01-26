@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Grid3x3, Trophy, Clock, Users, Copy, LogOut, ArrowRight } from 'lucide-react';
 import { useBingoGame } from '../../hooks/useBingoGame';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
@@ -63,17 +64,26 @@ export const Bingo = () => {
     const handleCopyChainId = () => {
         if (chainId) {
             navigator.clipboard.writeText(chainId);
-            alert("Chain ID copied! Share this with your friend.");
+            toast.success("Chain ID Copied", {
+                description: "Share this with your friend to play!",
+                duration: 3000,
+            });
         }
     };
 
     const handleCreate = () => {
-        if (!playerName.trim()) return alert("Enter a name first!");
+        if (!playerName.trim()) {
+            toast.error("Name Required", { description: "Please enter a nickname to host a game." });
+            return;
+        }
         createGame(playerName);
     };
 
     const handleJoin = () => {
-        if (!playerName.trim() || !hostIdInput.trim()) return alert("Enter name and Host ID.");
+        if (!playerName.trim() || !hostIdInput.trim()) {
+            toast.error("Missing Information", { description: "Please enter both your name and the Host ID." });
+            return;
+        }
         joinGame(hostIdInput.trim(), playerName);
     };
 

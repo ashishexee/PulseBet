@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Timer, Trophy, Users, History, ArrowRight, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { useColorTrading, Color, RoundState } from '../../hooks/useColorTrading';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
@@ -75,6 +77,7 @@ export const ColorTrading = () => {
     const { round, timeLeft, loading, error, placeBet, startGame, hasFetched, lastWin } = useColorTrading();
     const { isConnected, connect, owner } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
+    const navigate = useNavigate();
 
     const [betAmount, setBetAmount] = useState<number>(10);
     const [selectedColor, setSelectedColor] = useState<Color | null>(null);
@@ -95,6 +98,25 @@ export const ColorTrading = () => {
 
     const handleBet = async (color: Color) => {
         if (!isBetting) return;
+
+        if (betAmount <= 0) {
+            toast.error("Invalid Stake", { description: "Please enter a bet amount greater than 0." });
+            return;
+        }
+
+        const currentBalance = parseFloat(tokenBalance || '0');
+        if (betAmount > currentBalance) {
+            toast.error("Insufficient Funds", {
+                description: "You don't have enough PulseTokens.",
+                action: {
+                    label: "Mint Tokens",
+                    onClick: () => navigate('/mining/faucets')
+                },
+                cancel: { label: "Cancel", onClick: () => { } }
+            });
+            return;
+        }
+
         setSelectedColor(color);
         try {
             await placeBet(betAmount, color);

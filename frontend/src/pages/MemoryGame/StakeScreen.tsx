@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, Brain, Zap, Target, Trophy, Info } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { usePulseToken } from '../../hooks/usePulseToken';
 
 interface StakeScreenProps {
     onCreateGame: (stake: number) => Promise<void>;
@@ -7,11 +10,36 @@ interface StakeScreenProps {
 }
 
 export const StakeScreen = ({ onCreateGame, loading }: StakeScreenProps) => {
+    const { tokenBalance } = usePulseToken();
+    const navigate = useNavigate();
     const [stakeAmount, setStakeAmount] = useState('10');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const amount = parseInt(stakeAmount);
+
+        if (amount <= 0) {
+            toast.error("Invalid Stake", { description: "Please enter a stake amount greater than 0." });
+            return;
+        }
+
+        const currentBalance = parseFloat(tokenBalance || '0');
+        if (amount > currentBalance) {
+            toast.error("Insufficient Funds", {
+                description: "You don't have enough PulseTokens for this stake.",
+                action: {
+                    label: "Mint Tokens",
+                    onClick: () => navigate('/mining/faucets')
+                },
+                cancel: {
+                    label: "Cancel",
+                    onClick: () => { }
+                },
+                duration: 5000,
+            });
+            return;
+        }
+
         if (amount > 0) {
             await onCreateGame(amount);
         }

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Gem, Bomb } from 'lucide-react';
 import { useMinesGame } from '../../hooks/useMinesGame';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
 import { GameOverlay } from '../../components/GameOverlay';
+import { toast } from 'sonner';
 
 const MINES_RULES = (
     <div className="space-y-4">
@@ -40,6 +42,7 @@ export const Mines = () => {
     const { gameState, loading, startGame, revealTile, cashOut } = useMinesGame();
     const { isConnected, connect } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
+    const navigate = useNavigate();
     const [betAmount, setBetAmount] = useState<number>(0);
     const [minesCount, setMinesCount] = useState<number>(3);
     const isGameActive = gameState?.result === 'ACTIVE';
@@ -107,6 +110,34 @@ export const Mines = () => {
 
     }, [gameState]);
 
+
+    const handleStartGame = () => {
+        if (betAmount <= 0) {
+            toast.error("Invalid Stake", {
+                description: "Please enter a bet amount greater than 0.",
+                duration: 3000,
+            });
+            return;
+        }
+        const currentBalance = parseFloat(tokenBalance || '0');
+        if (betAmount > currentBalance) {
+            toast.error("Insufficient Funds", {
+                description: "You don't have enough PulseTokens for this bet.",
+                action: {
+                    label: "Mint Tokens",
+                    onClick: () => navigate('/mining/faucets')
+                },
+                cancel: {
+                    label: "Cancel",
+                    onClick: () => { }
+                },
+                duration: 5000,
+            });
+            return;
+        }
+        startGame(betAmount, minesCount);
+    };
+
     return (
         <div className="flex flex-col lg:flex-row gap-8 max-w-[1200px] mx-auto p-4 lg:p-8 min-h-[600px] items-start justify-center animate-fade-in font-sans selection:bg-white selection:text-black relative">
             <GameOverlay
@@ -139,7 +170,7 @@ export const Mines = () => {
                         <div className="flex-1 px-3 py-2">
                             <input
                                 type="number"
-                                value={betAmount}
+                                value={betAmount === 0 ? '' : betAmount}
                                 onChange={(e) => setBetAmount(Math.max(0, parseFloat(e.target.value) || 0))}
                                 disabled={isGameActive}
                                 className="bg-transparent text-white font-mono font-bold text-xl w-full outline-none placeholder-zinc-700"
@@ -204,7 +235,7 @@ export const Mines = () => {
                         )}
                     </button>
                 ) : (
-                    <button onClick={() => startGame(betAmount, minesCount)} disabled={loading} className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                    <button onClick={handleStartGame} disabled={loading} className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-sm flex items-center justify-center gap-2">
                         {loading ? "INITIALIZING..." : (
                             <>
                                 INITIATE SEQUENCE

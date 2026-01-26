@@ -100,7 +100,7 @@ export const useDotsAndBoxes = (gameIdInput?: string) => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner });
+            await app.query(requestBody, { owner: autosignerOwner });
             setGameState(null);
             // Return Composite ID: ChainID:GameID
             return `${chainId}:${randomId}`;
@@ -119,7 +119,7 @@ export const useDotsAndBoxes = (gameIdInput?: string) => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } finally {
             setLoading(false);

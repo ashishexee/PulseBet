@@ -84,7 +84,6 @@ export const useMinesGame = () => {
         }
     }, [isConnected, executeQuery, client, chainId]);
 
-    // Mutations - constructing raw strings since `variables` arg is missing in SDK
     const startGame = async (amount: number, mines: number) => {
         if (!owner) {
             console.error("Bet failed: Wallet not connected, owner is null");
