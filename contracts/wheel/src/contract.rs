@@ -63,10 +63,9 @@ impl Contract for WheelContract {
 }
 
 impl WheelContract {
-    async fn execute_spin(&mut self, amount: u64, owner: String) -> u8 {
+    async fn execute_spin(&mut self, amount: u64, owner: String) -> Vec<u8> {
         assert!(amount > 0, "Bet amount must be positive");
 
-        // 1. Debit Tokens (Cross-Call)
         let token_app_id = match self.state.pulse_token_id.get() {
             Some(id) => *id,
             None => ApplicationId::from_str(PULSE_TOKEN_APP_ID).expect("Invalid hardcoded PulseToken App ID"),
@@ -80,12 +79,13 @@ impl WheelContract {
             amount: Amount::from_tokens(amount.into()),
         };
         
+        
         self.runtime.call_application(true, token_app_id, &debit_op);
 
-        // 2. RNG (Spin Logic)
-        // Seed = ChainID + Timestamp + Nonce (active game count or specialized nonce)
-        // We'll use system_time as primary entropy + amount to vary it
-        let data = (self.runtime.chain_id(), self.runtime.system_time(), amount);
+        let nonce = *self.state.nonce.get();
+        self.state.nonce.set(nonce + 1);
+
+        let data = (self.runtime.chain_id(), self.runtime.system_time(), amount, nonce);
         let bytes = bcs::to_bytes(&data).expect("Serialization failed");
         let seed = SeedWrapper(bytes);
         let hash = CryptoHash::new(&seed);
@@ -118,6 +118,6 @@ impl WheelContract {
         self.state.active_game.set(Some(game));
 
         // 6. Return Result
-        segment_index
+        vec![segment_index]
     }
 }

@@ -15,7 +15,7 @@ pub struct WheelAbi;
 
 impl ContractAbi for WheelAbi {
     type Operation = Operation;
-    type Response = u8; // Returns winning segment index
+    type Response = Vec<u8>; // Returns winning segment index as bytes
 }
 
 impl ServiceAbi for WheelAbi {
@@ -27,19 +27,6 @@ impl ServiceAbi for WheelAbi {
 pub enum Operation {
     SpinWheel { amount: u64, owner: String },
 }
-
-// 10 Segments (Clockwise from top?)
-// Let's define multipliers.
-// 0: Risk (0x)
-// 1: Safety (1.5x)
-// 2: Risk (0x)
-// 3: Jackpot (10x)
-// 4: Safety (1.2x)
-// 5: Risk (0x)
-// 6: Big Win (5x)
-// 7: Safety (1.5x)
-// 8: Risk (0x)
-// 9: Good Win (3x)
 
 pub const MULTIPLIERS: [u64; 10] = [
     0,    // 0

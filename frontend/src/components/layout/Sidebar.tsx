@@ -5,7 +5,8 @@ import {
     Palette,
     Keyboard as KeyboardIcon,
     Grid3x3,
-    ArrowDownCircle
+    ArrowDownCircle,
+    Disc
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -25,6 +26,7 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
         { icon: <Brain size={20} />, label: 'Memory', path: '/games/memory' },
         { icon: <Palette size={20} />, label: 'Color Trading', path: '/games/color-trading' },
         { icon: <KeyboardIcon size={20} />, label: 'Wordle', path: '/games/wordle' },
+        { icon: <Disc size={20} />, label: 'Wheel', path: '/games/wheel' },
         { icon: <Grid3x3 size={20} />, label: 'Dots & Boxes', path: '/games/dots-and-boxes' }
     ];
 

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[view(context = ViewStorageContext)]
 pub struct WheelState {
     pub pulse_token_id: RegisterView<Option<ApplicationId>>,
+    pub nonce: RegisterView<u64>,
     pub active_game: RegisterView<Option<Game>>,
 }
 

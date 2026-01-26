@@ -21,7 +21,7 @@ interface Line {
 }
 
 export const useDotsAndBoxes = (gameIdInput?: string) => {
-    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
+    const { client, chainId, isConnected, autosignerOwner } = useLineraWallet();
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [loading, setLoading] = useState(false);
 

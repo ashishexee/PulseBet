@@ -9,6 +9,7 @@ import { Wordle } from './pages/Wordle';
 import { DotsAndBoxesGame } from './pages/DotsAndBoxes/Game';
 import Faucets from './pages/Faucets/Faucets';
 import { Plinko } from './pages/Plinko/Plinko';
+import { Wheel } from './pages/Wheel/Wheel';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/games/color-trading" element={<ColorTrading />} />
           <Route path="/games/wordle" element={<Wordle />} />
           <Route path="/games/dots-and-boxes" element={<DotsAndBoxesGame />} />
+          <Route path="/games/wheel" element={<Wheel />} />
           <Route path="/mining/faucets" element={<Faucets />} />
         </Routes>
       </Layout>

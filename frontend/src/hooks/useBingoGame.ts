@@ -25,7 +25,7 @@ export interface GameRoom {
 }
 
 export const useBingoGame = () => {
-    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
+    const { client, chainId, isConnected, autosignerOwner } = useLineraWallet();
     const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
     const [loading, setLoading] = useState(false);
     const [lastError, setLastError] = useState<string | null>(null);
