@@ -35,7 +35,7 @@ export interface BetData {
 }
 
 export const useColorTrading = () => {
-    const { client, chainId, owner } = useLineraWallet();
+    const { client, chainId, owner, autosignerOwner } = useLineraWallet();
     const [hasFetched, setHasFetched] = useState(false);
     const [round, setRound] = useState<Round | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
@@ -69,10 +69,14 @@ export const useColorTrading = () => {
 
     const executeTransition = useCallback(async (mutation: string) => {
         if (isTransitioning.current) return;
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         isTransitioning.current = true;
         console.log(`🤖 Auto-triggering transition: ${mutation}`);
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
         } catch (e) {
             console.error("Auto-transition failed:", e);
         } finally {
@@ -221,8 +225,10 @@ export const useColorTrading = () => {
                 bet(amount: ${amount}, color: ${color})
             }`;
 
-            const result = await executeQuery(mutation);
-            if (!result) throw new Error("Mutation failed");
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
 
             await fetchState();
         } catch (err: any) {

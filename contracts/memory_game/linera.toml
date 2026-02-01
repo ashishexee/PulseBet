@@ -1,6 +1,0 @@
-[project]
-name = "memory_game"
-
-[[module]]
-name = "memory_game"
-source_dir = "."

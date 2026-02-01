@@ -97,7 +97,16 @@ export const GameOverlay = ({ isConnected, gameId, gameTitle, rules }: GameOverl
                         <div className="mt-auto pt-6 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
 
                             <button
-                                onClick={() => setDontShowAgain(!dontShowAgain)}
+                                onClick={() => {
+                                    const newValue = !dontShowAgain;
+                                    setDontShowAgain(newValue);
+                                    // Save immediately to handle refresh/crash edge cases
+                                    if (newValue) {
+                                        localStorage.setItem(`rules_seen_${gameId}`, 'true');
+                                    } else {
+                                        localStorage.removeItem(`rules_seen_${gameId}`);
+                                    }
+                                }}
                                 className="flex items-center gap-3 group text-zinc-400 hover:text-white transition-colors cursor-pointer text-sm font-medium"
                             >
                                 {dontShowAgain ? (

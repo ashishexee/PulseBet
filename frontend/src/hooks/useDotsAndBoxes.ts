@@ -9,7 +9,7 @@ interface GameState {
     gridSize: number;
     horizontalLines: Line[];
     verticalLines: Line[];
-    squares: Record<string, string>; 
+    squares: Record<string, string>;
     status: 'Lobby' | 'Active' | 'Finished';
     scores: [number, number];
     winner: string | null;
@@ -21,7 +21,7 @@ interface Line {
 }
 
 export const useDotsAndBoxes = (gameIdInput?: string) => {
-    const { client, chainId, isConnected } = useLineraWallet();
+    const { client, chainId, isConnected, autosignerOwner } = useLineraWallet();
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -97,7 +97,10 @@ export const useDotsAndBoxes = (gameIdInput?: string) => {
         }`;
 
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             setGameState(null);
             // Return Composite ID: ChainID:GameID
             return `${chainId}:${randomId}`;
@@ -113,7 +116,10 @@ export const useDotsAndBoxes = (gameIdInput?: string) => {
             joinGame(gameId: "${gameId}", hostChainId: "${hostChainId}")
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } finally {
             setLoading(false);
@@ -122,13 +128,17 @@ export const useDotsAndBoxes = (gameIdInput?: string) => {
 
     const makeMove = async (compositeId: string, r1: number, c1: number, r2: number, c2: number) => {
         setLoading(true);
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         const { hostChainId, gameId } = parseGameId(compositeId);
 
         const mutation = `mutation {
             makeMove(gameId: "${gameId}", line: { start: { row: ${r1}, col: ${c1} }, end: { row: ${r2}, col: ${c2} } }, hostChainId: "${hostChainId}")
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } finally {
             setLoading(false);

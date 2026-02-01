@@ -45,13 +45,13 @@ pub enum Direction {
 // Chaotic Multipliers (in %)
 // Slot 0 to 8
 pub const MULTIPLIERS: [u64; 9] = [
-    777, // Slot 0: JACKPOT (7.77x)
-    10,  // Slot 1: Trap (0.1x)
-    100, // Slot 2: Good Win (1.0x)
-    5,   // Slot 3: Bad Trap (0.05x)
-    33,  // Slot 4: Center (0.33x)
-    5,   // Slot 5
-    100, // Slot 6
-    10,  // Slot 7
-    777, // Slot 8: JACKPOT
+    1000, // Slot 0: JACKPOT (10.0x)
+    25,   // Slot 1: (0.25x)
+    150,  // Slot 2: (1.5x)
+    50,   // Slot 3: (0.5x)
+    250,  // Slot 4: Center (2.5x)
+    50,   // Slot 5
+    150,  // Slot 6
+    25,   // Slot 7
+    1000, // Slot 8: JACKPOT
 ];

@@ -55,6 +55,7 @@ export const usePulseToken = () => {
     return {
         tokenBalance,
         mint,
+        refreshBalance: fetchTokenBalance,
         appId: PULSE_TOKEN_APP_ID,
         isReady
     };

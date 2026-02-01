@@ -5,13 +5,13 @@ export interface GameSession {
     targetWord: string;
     attempts: number;
     guesses: string[];
-    feedbackHistory: number[][]; 
+    feedbackHistory: number[][];
     isWon: boolean;
     isOver: boolean;
 }
 
 export const useWordle = () => {
-    const { client, chainId, isConnected, owner } = useLineraWallet();
+    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
     const [gameSession, setGameSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(false);
     const [validWords, setValidWords] = useState<Set<string> | null>(null);
@@ -80,7 +80,11 @@ export const useWordle = () => {
             startGame
         }`;
         try {
-            await executeQuery(mutation);
+            if (!client || !chainId || !APP_ID || !owner) return;
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await refreshState();
         } catch (e) {
             console.error("Start game failed:", e);
@@ -92,17 +96,21 @@ export const useWordle = () => {
     const submitGuess = async (guess: string) => {
         const upperGuess = guess.toUpperCase();
 
-        if (validWords && !validWords.has(upperGuess)) {
+    if (validWords && !validWords.has(upperGuess)) {
             throw new Error("Word not in dictionary");
         }
 
+        if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         setLoading(true);
         // Ensure guess is valid for string interpolation (sanitize if needed, but it's alphanumeric 5 chars)
         const mutation = `mutation {
             submitGuess(guess: "${upperGuess}")
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } catch (e) {
             console.error("Submit guess failed:", e);

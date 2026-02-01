@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Pickaxe, Brain, Grid3x3, ChevronRight, Zap, Cpu, Activity, ExternalLink, Database, Palette, Type } from "lucide-react";
+import { Pickaxe, Brain, Grid3x3, ChevronRight, Zap, Cpu, Activity, ExternalLink, Database, Palette, Type, Dices, Coins, LayoutGrid, CircleDot, Disc, Percent, ShieldCheck } from "lucide-react";
 
 export const Home = () => {
     const navigate = useNavigate();
@@ -10,6 +10,46 @@ export const Home = () => {
             description: 'Navigate the entropy field. High-stakes grid protocol.',
             icon: <Pickaxe className="w-6 h-6 text-white" />,
             path: '/games/mining',
+            status: 'LIVE'
+        },
+        {
+            id: 'dice',
+            title: 'Dice',
+            description: 'Adjust your win chance. Provably fair random number generation.',
+            icon: <Dices className="w-6 h-6 text-white" />,
+            path: '/games/dice',
+            status: 'LIVE'
+        },
+        {
+            id: 'coin-toss',
+            title: 'Coin Toss',
+            description: 'Heads or Tails. 50/50 Quantum probability matrix.',
+            icon: <Coins className="w-6 h-6 text-white" />,
+            path: '/games/coin-toss',
+            status: 'LIVE'
+        },
+        {
+            id: 'keno',
+            title: 'Keno',
+            description: 'Select your numbers. Match more to multiply your payout.',
+            icon: <LayoutGrid className="w-6 h-6 text-white" />,
+            path: '/games/keno',
+            status: 'LIVE'
+        },
+        {
+            id: 'plinko',
+            title: 'Plinko',
+            description: 'Pegboard probablity. Watch the ball fall through the pyramid.',
+            icon: <CircleDot className="w-6 h-6 text-white" />,
+            path: '/games/plinko',
+            status: 'LIVE'
+        },
+        {
+            id: 'wheel',
+            title: 'Wheel',
+            description: 'Spin the wheel of fortune. Multipliers up to 50x.',
+            icon: <Disc className="w-6 h-6 text-white" />,
+            path: '/games/wheel',
             status: 'LIVE'
         },
         {
@@ -44,11 +84,11 @@ export const Home = () => {
             path: '/games/wordle',
             status: 'LIVE'
         },
-         {
+        {
             id: 'dots_and_boxes',
             title: 'Dots and Boxes',
             description: 'Decentralized grid conquest. Draw lines, complete boxes, outscore your opponent.',
-            icon: <Type className="w-6 h-6 text-white" />,
+            icon: <Grid3x3 className="w-6 h-6 text-white" />,
             path: '/games/dots-and-boxes',
             status: 'LIVE'
         }
@@ -69,15 +109,30 @@ export const Home = () => {
             title: "Instant Finality",
             description: "Real-time gameplay with zero latency, powered by Linera's parallel execution.",
             icon: <Zap className="w-5 h-5 text-zinc-400" />
+        },
+        {
+            title: "0% Platform Fee",
+            description: "Keep 100% of your winnings. No hidden costs or house edge on your rewards.",
+            icon: <Percent className="w-5 h-5 text-zinc-400" />
+        },
+        {
+            title: "No Middleman",
+            description: "Direct P2P interaction via smart contracts. Trustless and permissionless.",
+            icon: <ShieldCheck className="w-5 h-5 text-zinc-400" />
         }
     ];
 
     const contracts = [
         { label: "Pulse Token ID", value: import.meta.env.VITE_PULSE_TOKEN_APP_ID || "Not Configured" },
         { label: "Mines App ID", value: import.meta.env.VITE_MINES_APP_ID || "Not Configured" },
+        { label: "Dice App ID", value: import.meta.env.VITE_DICE_APP_ID || "Not Configured" },
+        { label: "Coin Toss App ID", value: import.meta.env.VITE_COIN_TOSS_APP_ID || "Not Configured" },
+        { label: "Keno App ID", value: import.meta.env.VITE_KENO_APP_ID || "Not Configured" },
+        { label: "Plinko App ID", value: import.meta.env.VITE_PLINKO_APP_ID || "Not Configured" },
+        { label: "Wheel App ID", value: import.meta.env.VITE_WHEEL_APP_ID || "Not Configured" },
         { label: "Memory App ID", value: import.meta.env.VITE_MEMORY_GAME_APP_ID || "Not Configured" },
         { label: "Color Trading App ID", value: import.meta.env.VITE_COLOR_TRADING_APP_ID || "Not Configured" },
-        { label: "Wordle App ID", value: import.meta.env.VITE_WORDLE_APP_ID || "Not Configured" }, // Note: .env has spaces around =, might need check
+        { label: "Wordle App ID", value: import.meta.env.VITE_WORDLE_APP_ID || "Not Configured" },
         { label: "Bingo App ID", value: import.meta.env.VITE_BINGO_APP_ID || "Not Configured" },
     ];
 
@@ -115,8 +170,8 @@ export const Home = () => {
                             </h1>
 
                             <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl leading-relaxed animate-fade-in-up delay-200 font-light">
-                                The <strong className="text-white font-medium">Decentralized Gaming Ecosystem</strong> built on the Linera Layer-1 blockchain.
-                                Play fair, provably fair games and earn <strong className="text-white font-medium">PulseToken</strong> with instant finality.
+                                A Fully <strong className="text-white font-medium">Decentralized Betting Platform</strong> built on the Linera Layer-1 blockchain.
+                                Wager <strong className="text-white font-medium">PulseTokens</strong> on <strong className="text-white font-medium">Games</strong> to earn rewards with instant finality.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4 animate-fade-in-up delay-300">

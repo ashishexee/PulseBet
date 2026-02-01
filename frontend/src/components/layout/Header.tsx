@@ -2,18 +2,28 @@ import { useNavigate } from "react-router-dom";
 import { Menu, Wallet, LogOut, Copy, Check } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface HeaderProps {
     toggleSidebar: () => void;
 }
 
 export function Header({ toggleSidebar }: HeaderProps) {
-    const { isConnected, connect, disconnect, chainId, balance, owner } = useLineraWallet();
+    const { isConnected, connect, disconnect, chainId, balance, owner, isConnecting } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [copiedChainId, setCopiedChainId] = useState(false);
+    const [toastId, setToastId] = useState<string | number | null>(null);
+
+    // Dismiss toast when connection process is fully complete (success or fail)
+    useEffect(() => {
+        if (!isConnecting && toastId) {
+            toast.dismiss(toastId);
+            setToastId(null);
+        }
+    }, [isConnecting, toastId]);
 
     const copyToClipboard = async (text: string, type: 'address' | 'chainId') => {
         try {
@@ -42,6 +52,8 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     </span>
                 </div>
             </div>
+
+            {/* Center Status Indicator - Removed per user request */}
 
             <div className="flex items-center gap-4">
                 {isConnected ? (
@@ -92,11 +104,19 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     </div>
                 ) : (
                     <button
-                        onClick={connect}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all transform active:scale-95"
+                        onClick={() => {
+                            connect();
+                            const id = toast.info("Wallet Connection Initiated", {
+                                description: "Please confirm the autosigner authorization in MetaMask to proceed.",
+                                duration: 8000,
+                            });
+                            setToastId(id);
+                        }}
+                        disabled={isConnecting}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-sm transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         <Wallet className="w-4 h-4" />
-                        <span>Connect Metamask</span>
+                        <span>{isConnecting ? "Connecting..." : "Connect Metamask"}</span>
                     </button>
                 )}
             </div>

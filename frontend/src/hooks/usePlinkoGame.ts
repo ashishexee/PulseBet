@@ -15,7 +15,7 @@ interface PlinkoGame {
 export type Direction = 'Left' | 'Right';
 
 export const usePlinkoGame = () => {
-    const { client, chainId, isConnected, owner } = useLineraWallet();
+    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
     const [gameState, setGameState] = useState<PlinkoGame | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -83,7 +83,10 @@ export const usePlinkoGame = () => {
             startGame(amount: ${Math.floor(amount)}, owner: "${owner}")
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await refreshState();
         } catch (e) {
             console.error("Start failed:", e);
@@ -93,15 +96,15 @@ export const usePlinkoGame = () => {
     };
 
     const advanceBatch = async (targetRow: number) => {
-        if (!APP_ID) return;
-        // We don't necessarily block UI for this, to allow animation flow?
-        // But let's set loading to be safe.
-        // setLoading(true); 
+        if (!APP_ID || !autosignerOwner) return;
         const mutation = `mutation {
             advanceBatch(targetRow: ${targetRow})
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } catch (e) {
             console.error("Advance failed:", e);

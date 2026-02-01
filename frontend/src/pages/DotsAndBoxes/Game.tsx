@@ -3,9 +3,10 @@ import { Board } from './Board';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { useDotsAndBoxes } from '../../hooks/useDotsAndBoxes';
 import { Play, Users, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const DotsAndBoxesGame = () => {
-    const { isConnected, connect, owner } = useLineraWallet();
+    const { isConnected, connect, owner, autosignerOwner, isConnecting } = useLineraWallet();
 
     // UI State
     const [inputGameId, setInputGameId] = useState('');
@@ -30,13 +31,17 @@ export const DotsAndBoxesGame = () => {
     // Derived State
     const status = gameState ? 'PLAYING' : 'LOBBY';
     const normalizedOwner = owner?.toLowerCase();
+    const normalizedAutosigner = autosignerOwner?.toLowerCase();
     const p1 = gameState?.player1.toLowerCase();
     const p2 = gameState?.player2?.toLowerCase();
 
-    const isP1 = normalizedOwner === p1;
-    const isP2 = normalizedOwner === p2;
-    const isPlayerTurn = gameState?.currentTurn.toLowerCase() === normalizedOwner;
-    const canPlay = isConnected && isPlayerTurn && (isP1 || isP2);
+    const isP1 = !!(p1 && (p1 === normalizedOwner || p1 === normalizedAutosigner));
+    const isP2 = !!(p2 && (p2 === normalizedOwner || p2 === normalizedAutosigner));
+
+    // Check if current turn matches either of our known addresses
+    const normalizedTurn = gameState?.currentTurn.toLowerCase();
+    const isPlayerTurn = !!(normalizedTurn && (normalizedTurn === normalizedOwner || normalizedTurn === normalizedAutosigner));
+    const canPlay = !!(isConnected && isPlayerTurn && (isP1 || isP2));
 
     // Colors
     const P1_COLOR = '#22c55e'; // Green
@@ -51,7 +56,10 @@ export const DotsAndBoxesGame = () => {
     };
 
     const handleJoinGame = async () => {
-        if (!inputGameId) return;
+        if (!inputGameId.trim()) {
+            toast.error("Invalid Game ID", { description: "Please enter a Game ID to join." });
+            return;
+        }
         await joinGame(inputGameId);
         setActiveGameId(inputGameId);
     };
@@ -109,8 +117,8 @@ export const DotsAndBoxesGame = () => {
                 </div>
 
                 {!isConnected ? (
-                    <button onClick={connect} className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm">
-                        Connect Wallet
+                    <button onClick={connect} disabled={isConnecting} className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                        {isConnecting ? "Connecting..." : "Connect Wallet"}
                     </button>
                 ) : (
                     <>

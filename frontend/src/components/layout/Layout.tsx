@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { Toaster } from 'sonner';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -32,8 +33,9 @@ export const Layout = ({ children }: LayoutProps) => {
                     <Sidebar onClose={() => setSidebarOpen(false)} collapsed={!sidebarOpen} />
                 </aside>
                 <main className={`flex-1 pt-16 transition-all duration-300 ease-in-out overflow-x-hidden min-h-screen ${sidebarOpen ? 'ml-[240px]' : 'ml-[80px]'}`}>
-                    <div className="w-full">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden pt-20 lg:pt-0 pb-20 lg:pb-0 scrollbar-hide">
                         {children}
+                        <Toaster position="bottom-center" theme="dark" invert richColors />
                     </div>
                 </main>
             </div>

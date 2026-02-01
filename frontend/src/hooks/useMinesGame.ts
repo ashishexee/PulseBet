@@ -12,10 +12,9 @@ export interface GameState {
 }
 
 export const useMinesGame = () => {
-    const { client, chainId, isConnected, owner } = useLineraWallet();
+    const { client, chainId, isConnected, owner, autosignerOwner } = useLineraWallet();
     const [gameState, setGameState] = useState<GameState | null>(null);
     const [loading, setLoading] = useState(false);
-
     const APP_ID = import.meta.env.VITE_MINES_APP_ID;
 
     const executeQuery = useCallback(async (query: string, variables?: Record<string, any>) => {
@@ -85,7 +84,6 @@ export const useMinesGame = () => {
         }
     }, [isConnected, executeQuery, client, chainId]);
 
-    // Mutations - constructing raw strings since `variables` arg is missing in SDK
     const startGame = async (amount: number, mines: number) => {
         if (!owner) {
             console.error("Bet failed: Wallet not connected, owner is null");
@@ -102,7 +100,10 @@ export const useMinesGame = () => {
         }`;
         console.log("Bet mutation:", mutation);
         try {
-            const result = await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            const result = await app.query(requestBody, { owner });
             console.log("Bet result:", result);
             await refreshState();
         } catch (e) {
@@ -118,7 +119,10 @@ export const useMinesGame = () => {
             reveal(tileId: ${tileId})
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner: autosignerOwner });
             await refreshState();
         } catch (e) {
             // console.error("Reveal failed:", e);
@@ -134,7 +138,10 @@ export const useMinesGame = () => {
             cashOut
         }`;
         try {
-            await executeQuery(mutation);
+            const chain = await client.chain(chainId);
+            const app = await chain.application(APP_ID);
+            const requestBody = JSON.stringify({ query: mutation });
+            await app.query(requestBody, { owner });
             await refreshState();
         } catch (e) {
             // console.error("Cashout failed:", e);
