@@ -12,6 +12,7 @@ import { Plinko } from './pages/Plinko/Plinko';
 import { Wheel } from './pages/Wheel/Wheel';
 import Dice from './pages/Dice/Dice';
 import { Keno } from './pages/Keno/Keno';
+import { CoinToss } from './pages/CoinToss/CoinToss';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/games/wheel" element={<Wheel />} />
           <Route path="/games/dice" element={<Dice />} />
           <Route path="/games/keno" element={<Keno />} />
+          <Route path="/games/coin-toss" element={<CoinToss />} />
           <Route path="/mining/faucets" element={<Faucets />} />
         </Routes>
       </Layout>

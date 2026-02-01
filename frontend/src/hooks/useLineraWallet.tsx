@@ -83,8 +83,6 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
                     const envUrl = import.meta.env.VITE_LINERA_NODE_URL?.trim();
                     const nodeUrl = envUrl || "https://testnet-conway.linera.net";
                     const faucet = new Faucet(import.meta.env.VITE_LINERA_FAUCET_URL || "https://faucet.testnet-conway.linera.net");
-
-                    // Parallelize heavy imports and IO
                     const [{ MetaMask }, wallet] = await Promise.all([
                         import('../utils/metamask'),
                         faucet.createWallet()

@@ -31,6 +31,7 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
         { icon: <Disc size={20} />, label: 'Wheel', path: '/games/wheel' },
         { icon: <Dices size={20} />, label: 'Dice', path: '/games/dice' },
         { icon: <LayoutGrid size={20} />, label: 'Keno', path: '/games/keno' },
+        { icon: <Coins size={20} />, label: 'Coin Toss', path: '/games/coin-toss' },
         { icon: <Grid3x3 size={20} />, label: 'Dots & Boxes', path: '/games/dots-and-boxes' }
     ];
 

@@ -43,7 +43,7 @@ impl Service for CoinTossService {
         
         Schema::build(
             query_root,
-            MutationRoot,
+            MutationRoot { runtime: self.runtime.clone() },
             EmptySubscription,
         )
         .finish()
@@ -63,7 +63,9 @@ impl QueryRoot {
     }
 }
 
-pub struct MutationRoot;
+pub struct MutationRoot {
+    runtime: Arc<ServiceRuntime<CoinTossService>>,
+}
 
 #[Object]
 impl MutationRoot {
@@ -73,6 +75,7 @@ impl MutationRoot {
             prediction,
             owner,
         };
-        bcs::to_bytes(&operation).expect("Serialization failed")
+        self.runtime.schedule_operation(&operation);
+        Vec::new()
     }
 }
