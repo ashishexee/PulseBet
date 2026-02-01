@@ -68,11 +68,8 @@ impl Contract for DiceContract {
 
 impl DiceContract {
     async fn execute_roll(&mut self, amount: u64, target: u8, roll_type: RollType, owner: String) {
-        // 1. Validation
         assert!(amount > 0, "Bet amount must be positive");
         assert!(target >= 1 && target <= 98, "Target must be between 1 and 98"); 
-
-        // 2. Resolve Token App ID
         let token_app_id = match self.state.pulse_token_id.get() {
             Some(id) => *id,
             None => ApplicationId::from_str(PULSE_TOKEN_APP_ID)
@@ -80,6 +77,8 @@ impl DiceContract {
         };
         let token_app_id = token_app_id.with_abi::<pulse_token::PulseTokenAbi>();
         let account_owner = AccountOwner::from_str(&owner).expect("Invalid owner address");
+        let signer = self.runtime.authenticated_signer();
+        assert_eq!(signer, Some(account_owner), "Operation must be signed by the owner");
 
         // 3. Debit Tokens
         let debit_op = pulse_token::Operation::GameDebit {
@@ -106,8 +105,6 @@ impl DiceContract {
             RollType::Over => (roll >= target, 100 - target as u64),
         };
 
-        // Calculate Multiplier: (100 / WinChance) * (1 - HouseEdge)
-        // Scaled by 100 for precision.
         let multiplier_x100 = if win_chance == 0 { 0 } else {
              (100 * (100 - HOUSE_EDGE_PERCENT)) / win_chance
         };
@@ -117,8 +114,6 @@ impl DiceContract {
         } else {
             0
         };
-
-        // 6. Credit Tokens (if won)
         if won && payout > 0 {
              let credit_op = pulse_token::Operation::GameCredit {
                 owner: account_owner,
