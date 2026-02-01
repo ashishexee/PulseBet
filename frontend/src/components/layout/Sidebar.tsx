@@ -7,7 +7,8 @@ import {
     Grid3x3,
     ArrowDownCircle,
     Disc,
-    Dices
+    Dices,
+    LayoutGrid
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -29,6 +30,7 @@ export const Sidebar = ({ onClose, collapsed = false }: SidebarProps) => {
         { icon: <KeyboardIcon size={20} />, label: 'Wordle', path: '/games/wordle' },
         { icon: <Disc size={20} />, label: 'Wheel', path: '/games/wheel' },
         { icon: <Dices size={20} />, label: 'Dice', path: '/games/dice' },
+        { icon: <LayoutGrid size={20} />, label: 'Keno', path: '/games/keno' },
         { icon: <Grid3x3 size={20} />, label: 'Dots & Boxes', path: '/games/dots-and-boxes' }
     ];
 

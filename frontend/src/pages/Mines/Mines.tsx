@@ -6,6 +6,7 @@ import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
 import { GameOverlay } from '../../components/GameOverlay';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MINES_RULES = (
     <div className="space-y-4">
@@ -48,6 +49,29 @@ export const Mines = () => {
     const isGameActive = gameState?.result === 'ACTIVE';
     const revealedTiles = gameState?.revealedTiles || [];
     const isGameOver = gameState?.result === 'LOST' || gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT';
+
+    // Overlay State
+    const [showOverlay, setShowOverlay] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+
+    useEffect(() => {
+        if (isGameOver) {
+            setShowOverlay(true);
+            setCountdown(5);
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        setShowOverlay(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        } else {
+            setShowOverlay(false);
+        }
+    }, [isGameOver, gameState?.result]); // Run when game over state changes
 
     const getTileContent = (id: number) => {
         const isRevealed = revealedTiles.includes(id);
@@ -260,27 +284,67 @@ export const Mines = () => {
                 <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
 
                 {/* Result Overlay */}
-                {isGameOver && (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/80 backdrop-blur-sm rounded-2xl animate-in fade-in zoom-in duration-300">
-                        {gameState?.result === 'WON' && (
-                            <>
-                                <div className="text-5xl md:text-6xl font-black text-white tracking-tighter mb-6 drop-shadow-2xl">COMPLETE</div>
-                                <div className="text-2xl font-bold text-black font-mono bg-white px-8 py-3 rounded-full shadow-xl">
-                                    +{(betAmount * ((gameState?.currentMultiplier || 100) / 100) - betAmount).toFixed(4)} PT
+                <AnimatePresence>
+                    {showOverlay && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute inset-0 z-20 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm rounded-2xl"
+                        >
+                            <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6 min-w-[320px] relative overflow-hidden text-center m-4">
+                                {/* Close Button */}
+                                <button
+                                    onClick={() => setShowOverlay(false)}
+                                    className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                </button>
+
+                                <div className="space-y-1">
+                                    <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2">
+                                        {gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT' ? 'Winning Round' : 'Round Over'}
+                                    </h3>
+                                    <div className="h-1 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto"></div>
                                 </div>
-                            </>
-                        )}
-                        {gameState?.result === 'LOST' && (
-                            <div className="text-5xl md:text-6xl font-black text-zinc-500 tracking-tighter opacity-50">TERMINATED</div>
-                        )}
-                        {gameState?.result === 'CASHED_OUT' && (
-                            <div className="flex flex-col items-center">
-                                <div className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4">SECURED</div>
-                                <div className="text-3xl font-black text-white font-mono border-b-2 border-white pb-1">{(betAmount * ((gameState?.currentMultiplier || 100) / 100)).toFixed(4)} PT</div>
+
+                                <div className="grid grid-cols-2 gap-8 w-full">
+                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                        <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Status</div>
+                                        <div className={`text-xl font-black ${gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT' ? 'text-white' : 'text-zinc-500'}`}>
+                                            {gameState?.result === 'WON' ? 'COMPLETE' : gameState?.result === 'CASHED_OUT' ? 'SECURED' : 'TERMINATED'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                        <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Multiplier</div>
+                                        <div className={`text-3xl font-black ${gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT' ? 'text-white' : 'text-zinc-600'}`}>
+                                            {((gameState?.currentMultiplier || 100) / 100).toFixed(2)}x
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {(gameState?.result === 'WON' || gameState?.result === 'CASHED_OUT') && (
+                                    <div className="bg-white text-black px-8 py-3 rounded-full font-black text-xl tracking-wide shadow-lg shadow-white/10">
+                                        +{(betAmount * ((gameState?.currentMultiplier || 100) / 100)).toFixed(4)} PT
+                                    </div>
+                                )}
+
+                                {/* Timer Bar */}
+                                <div className="w-full bg-zinc-800/50 h-1 rounded-full overflow-hidden mt-2">
+                                    <motion.div
+                                        initial={{ width: '100%' }}
+                                        animate={{ width: '0%' }}
+                                        transition={{ duration: 5, ease: "linear" }}
+                                        className="h-full bg-white"
+                                    />
+                                </div>
+                                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">
+                                    Closing in {countdown}s
+                                </div>
                             </div>
-                        )}
-                    </div>
-                )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Multiplier Badge */}
                 {isGameActive && (

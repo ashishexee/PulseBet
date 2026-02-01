@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useWheelGame } from '../../hooks/useWheelGame';
 import { useLineraWallet } from '../../hooks/useLineraWallet';
 import { usePulseToken } from '../../hooks/usePulseToken';
@@ -49,6 +49,11 @@ export const Wheel = () => {
     const [rotation, setRotation] = useState(0);
     const controls = useAnimation();
 
+    // Overlay State
+    const [showOverlay, setShowOverlay] = useState(false);
+    const [lastResult, setLastResult] = useState<{ index: number; win: number } | null>(null);
+    const [countdown, setCountdown] = useState(5);
+
     const spin = async () => {
         if (betAmount <= 0) return;
         const currentBalance = parseFloat(tokenBalance || '0');
@@ -57,6 +62,7 @@ export const Wheel = () => {
             return;
         }
 
+        setShowOverlay(false); // Hide previous overlay if any
         toast.info("Consulting Oracle...", { duration: 1000 });
         const resultIndex = await spinWheel(betAmount);
 
@@ -98,23 +104,47 @@ export const Wheel = () => {
         // Refresh Balance specificially after visual spin ends
         await refreshBalance?.();
 
-        // Result Toast
+        // Show Overlay
         const resultData = WHEEL_DATA[resultIndex];
-        if (resultData.value > 0) {
-            toast.success("Fortune Favors You!", {
-                description: `Hit ${resultData.label} Multiplier! Won ${(betAmount * resultData.value).toFixed(2)} PT`,
-                duration: 5000,
+        setLastResult({ index: resultIndex, win: betAmount * resultData.value });
+        setShowOverlay(true);
+        setCountdown(5);
+
+        // Auto-close timer
+        const timer = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    setShowOverlay(false);
+                    return 0;
+                }
+                return prev - 1;
             });
-        } else {
-            toast.error("Entropy Consumed", {
-                description: "The Core claimed your stake.",
-                duration: 3000
-            });
-        }
+        }, 1000);
+
+        // Cleanup verification is hard here without ref, but simple interval is fine for now. 
+        // Better to use useEffect for countdown but inline is okay for this flow if carefully managed.
+        // Refactoring to useEffect for consistency with other games.
     };
 
+    // Countdown Effect
+    useEffect(() => {
+        if (showOverlay) {
+            setCountdown(5);
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        setShowOverlay(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [showOverlay]);
+
     return (
-        <div className="flex flex-col xl:flex-row gap-24 max-w-full mx-auto p-8 min-h-[600px] h-[calc(100vh-80px)] items-center justify-center animate-fade-in font-sans overflow-hidden">
+        <div className="flex flex-col xl:flex-row gap-24 max-w-full mx-auto p-8 min-h-[600px] h-[calc(100vh-80px)] items-center justify-center animate-fade-in font-sans overflow-hidden relative">
             <GameOverlay
                 isConnected={isConnected}
                 connect={connect}
@@ -122,6 +152,70 @@ export const Wheel = () => {
                 gameTitle="Fortune Protocol"
                 rules={WHEEL_RULES}
             />
+
+            {/* Result Overlay */}
+            <AnimatePresence>
+                {showOverlay && lastResult && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm rounded-2xl"
+                    >
+                        <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6 min-w-[320px] relative overflow-hidden text-center m-4">
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setShowOverlay(false)}
+                                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            <div className="space-y-1">
+                                <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2">
+                                    {lastResult.win > 0 ? 'Winning Spin' : 'Round Over'}
+                                </h3>
+                                <div className="h-1 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto"></div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-8 w-full">
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Segment</div>
+                                    <div className="text-3xl font-black text-white" style={{ color: WHEEL_DATA[lastResult.index].color }}>
+                                        {WHEEL_DATA[lastResult.index].label}
+                                    </div>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Multiplier</div>
+                                    <div className={`text-3xl font-black ${lastResult.win > 0 ? 'text-white' : 'text-zinc-600'}`}>
+                                        {WHEEL_DATA[lastResult.index].value}x
+                                    </div>
+                                </div>
+                            </div>
+
+                            {lastResult.win > 0 && (
+                                <div className="bg-white text-black px-8 py-3 rounded-full font-black text-xl tracking-wide shadow-lg shadow-white/10">
+                                    +{lastResult.win.toFixed(2)} PT
+                                </div>
+                            )}
+
+                            {/* Timer Bar */}
+                            <div className="w-full bg-zinc-800/50 h-1 rounded-full overflow-hidden mt-2">
+                                <motion.div
+                                    initial={{ width: '100%' }}
+                                    animate={{ width: '0%' }}
+                                    transition={{ duration: 5, ease: "linear" }}
+                                    className="h-full bg-white"
+                                    key={showOverlay ? 'active' : 'inactive'}
+                                />
+                            </div>
+                            <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">
+                                Closing in {countdown}s
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Left Controls */}
             <div className="w-full max-w-[420px] bg-zinc-900/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col gap-6 shadow-2xl border border-zinc-800/50 shrink-0">

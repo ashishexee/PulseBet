@@ -100,6 +100,30 @@ export const Plinko = () => {
         return pins;
     };
 
+    // Overlay State
+    const [showOverlay, setShowOverlay] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+    const [lastWin, setLastWin] = useState(0);
+
+    useEffect(() => {
+        if (!gameState) return;
+        if (gameState.result === 'WON') {
+            setLastWin(betAmount * (gameState.finalMultiplier || 0) / 100);
+            setShowOverlay(true);
+            setCountdown(5);
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        setShowOverlay(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [gameState?.result]);
+
     return (
         <div className="flex flex-col xl:flex-row gap-8 max-w-[1600px] mx-auto p-4 lg:p-8 min-h-[800px] items-center xl:items-start justify-center animate-fade-in font-sans selection:bg-pink-500 selection:text-white relative">
             <GameOverlay
@@ -109,6 +133,68 @@ export const Plinko = () => {
                 gameTitle="Plinko: Chaos Core"
                 rules={PLINKO_RULES}
             />
+
+            {/* Result Overlay */}
+            <AnimatePresence>
+                {showOverlay && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm rounded-2xl fixed inset-0 z-[100]"
+                    >
+                        <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6 min-w-[320px] relative overflow-hidden text-center m-4">
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setShowOverlay(false)}
+                                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            <div className="space-y-1">
+                                <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2">
+                                    Path Complete
+                                </h3>
+                                <div className="h-1 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto"></div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-8 w-full">
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Payout</div>
+                                    <div className="text-xl font-black text-white">
+                                        {lastWin.toFixed(2)} PT
+                                    </div>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Multiplier</div>
+                                    <div className="text-3xl font-black text-white">
+                                        {((gameState?.finalMultiplier || 100) / 100).toFixed(2)}x
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white text-black px-8 py-3 rounded-full font-black text-xl tracking-wide shadow-lg shadow-white/10">
+                                +{lastWin.toFixed(4)} PT
+                            </div>
+
+                            {/* Timer Bar */}
+                            <div className="w-full bg-zinc-800/50 h-1 rounded-full overflow-hidden mt-2">
+                                <motion.div
+                                    initial={{ width: '100%' }}
+                                    animate={{ width: '0%' }}
+                                    transition={{ duration: 5, ease: "linear" }}
+                                    className="h-full bg-white"
+                                    key={showOverlay ? 'active' : 'inactive'}
+                                />
+                            </div>
+                            <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">
+                                Closing in {countdown}s
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="w-full max-w-[400px] bg-zinc-900/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col gap-8 shadow-2xl border border-zinc-800/50 relative overflow-hidden shrink-0 h-fit">
                 <div className="space-y-1 border-b border-zinc-800 pb-6">

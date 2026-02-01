@@ -2,10 +2,33 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDiceGame } from '../../hooks/useDiceGame';
 import { usePulseToken } from '../../hooks/usePulseToken';
+import { useLineraWallet } from '../../hooks/useLineraWallet';
+import { GameOverlay } from '../../components/GameOverlay';
+const DICE_RULES = (
+    <div className="space-y-4">
+        <div className="space-y-2">
+            <h4 className="text-white font-bold text-sm uppercase tracking-wider">Game Objective</h4>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+                Predict whether the dice roll will be Over or Under your target number.
+            </p>
+        </div>
+        <div className="space-y-3 pt-2">
+            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800 flex items-center gap-4">
+                <div className="w-5 h-5 bg-white rounded flex items-center justify-center font-bold text-black text-xs">50</div>
+                <div className="text-sm text-zinc-300"><strong>Adjust Target</strong> to change your Win Chance and Multiplier.</div>
+            </div>
+            <div className="p-3 bg-zinc-950/50 rounded-lg border border-zinc-800 flex items-center gap-4">
+                <div className="text-green-500 font-bold">$$$</div>
+                <div className="text-sm text-zinc-300"><strong>Lower Win Chance</strong> = Higher Payout Multiplier.</div>
+            </div>
+        </div>
+    </div>
+);
 
 const Dice = () => {
     const { rollDice, loading, lastGame } = useDiceGame();
     const { tokenBalance: balance } = usePulseToken();
+    const { isConnected, connect } = useLineraWallet();
 
     const [target, setTarget] = useState(50);
     const [amount, setAmount] = useState(10);
@@ -14,6 +37,10 @@ const Dice = () => {
 
     const [displayRoll, setDisplayRoll] = useState(50);
     const [isRolling, setIsRolling] = useState(false);
+
+    // Overlay State
+    const [showOverlay, setShowOverlay] = useState(false);
+    const [countdown, setCountdown] = useState(5);
 
     const winChance = mode === 'Under' ? target : (100 - target);
     const multiplier = winChance > 0 ? (100 / winChance) : 0;
@@ -31,6 +58,7 @@ const Dice = () => {
         }
 
         setIsRolling(true);
+        setShowOverlay(false);
 
         // Start random shuffle animation
         const interval = setInterval(() => {
@@ -52,17 +80,38 @@ const Dice = () => {
         if (lastGame && isRolling) {
             setDisplayRoll(lastGame.resultRoll);
             setIsRolling(false);
+
+            // Show Overlay
+            setShowOverlay(true);
+            setCountdown(5);
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        setShowOverlay(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
         }
     }, [lastGame]);
 
     return (
         <div className="flex w-full min-h-screen bg-black text-white font-sans overflow-hidden relative">
+            <GameOverlay
+                isConnected={isConnected}
+                connect={connect}
+                gameId="dice"
+                gameTitle="Pulse Dice"
+                rules={DICE_RULES}
+            />
 
             {/* Background Ambient Glow - MONOCHROME */}
             <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-white/5 blur-[150px] rounded-full pointer-events-none" />
             <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-zinc-500/10 blur-[150px] rounded-full pointer-events-none" />
 
-            <div className="flex flex-col lg:flex-row w-full h-full relative z-10 p-4 md:p-8 gap-6">
+            <div className="flex flex-col lg:flex-row w-full h-full relative z-10 p-4 md:p-8 gap-6 max-w-[1400px] mx-auto items-center justify-center">
 
                 {/* LEFT PANEL: CONTROLS */}
                 <div className="w-full lg:w-1/3 flex flex-col justify-center space-y-5 bg-zinc-900/50 backdrop-blur-2xl border border-white/5 p-6 rounded-3xl shadow-2xl">
@@ -141,26 +190,32 @@ const Dice = () => {
                     </AnimatePresence>
 
                     {/* Action Button */}
-                    <button
-                        onClick={handleRoll}
-                        disabled={loading || isRolling}
-                        className="w-full py-4 mt-auto bg-white text-black rounded-xl font-black text-xl uppercase tracking-widest hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 active:scale-[0.98]"
-                    >
-                        {loading || isRolling ? (
-                            <span className="flex items-center justify-center gap-2 animate-pulse">
-                                Rolling...
-                            </span>
-                        ) : (
-                            <div className="flex flex-col items-center leading-none">
-                                <span>Roll Dice</span>
-                                <span className="text-[10px] opacity-60 font-normal tracking-normal mt-1">Win {potentialPayout.toFixed(2)} PULSE</span>
-                            </div>
-                        )}
-                    </button>
+                    {!isConnected ? (
+                        <button onClick={connect} className="w-full py-4 mt-auto bg-white text-black rounded-xl font-black text-xl uppercase tracking-widest hover:bg-zinc-200 shadow-lg transform active:scale-[0.98] transition-all">
+                            Connect Wallet
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleRoll}
+                            disabled={loading || isRolling}
+                            className="w-full py-4 mt-auto bg-white text-black rounded-xl font-black text-xl uppercase tracking-widest hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 active:scale-[0.98]"
+                        >
+                            {loading || isRolling ? (
+                                <span className="flex items-center justify-center gap-2 animate-pulse">
+                                    Rolling...
+                                </span>
+                            ) : (
+                                <div className="flex flex-col items-center leading-none">
+                                    <span>Roll Dice</span>
+                                    <span className="text-[10px] opacity-60 font-normal tracking-normal mt-1">Win {potentialPayout.toFixed(2)} PULSE</span>
+                                </div>
+                            )}
+                        </button>
+                    )}
                 </div>
 
                 {/* RIGHT PANEL: VISUALIZATION */}
-                <div className="w-full lg:w-2/3 relative flex flex-col bg-zinc-900/30 backdrop-blur-md rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+                <div className="w-full lg:w-2/3 relative flex flex-col bg-zinc-900/30 backdrop-blur-md rounded-3xl border border-white/5 overflow-hidden shadow-2xl min-h-[500px]">
 
                     {/* Top Info Bar */}
                     <div className="absolute top-6 left-0 w-full flex justify-between px-8 z-20">
@@ -191,21 +246,68 @@ const Dice = () => {
                                 {displayRoll}
                             </motion.div>
                         </AnimatePresence>
+                    </div>
 
-                        {/* Result Subtext */}
-                        {!isRolling && lastGame && (
+                    {/* Result Overlay */}
+                    <AnimatePresence>
+                        {showOverlay && (
                             <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`text-2xl font-bold uppercase tracking-widest mt-2 px-4 py-1.5 rounded-full border ${Number(lastGame.payout) > 0
-                                    ? 'bg-white/10 border-white text-white'
-                                    : 'bg-zinc-800/50 border-zinc-700 text-zinc-500'
-                                    }`}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md rounded-3xl"
                             >
-                                {Number(lastGame.payout) > 0 ? 'Winner Winner!' : 'Try Again'}
+                                <div className="bg-gradient-to-br from-zinc-900 via-zinc-950 to-black border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6 min-w-[320px] relative overflow-hidden text-center m-4">
+                                    {/* Close Button */}
+                                    <button
+                                        onClick={() => setShowOverlay(false)}
+                                        className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                    </button>
+
+                                    <div className="space-y-1">
+                                        <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2">
+                                            {Number(lastGame?.payout) > 0 ? 'Winning Roll' : 'Round Over'}
+                                        </h3>
+                                        <div className="h-1 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent mx-auto"></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-8 w-full">
+                                        <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                            <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Rolled</div>
+                                            <div className="text-3xl font-black text-white">{lastGame?.resultRoll} <span className="text-zinc-600 text-sm">/ 100</span></div>
+                                        </div>
+                                        <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                            <div className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-1">Multiplier</div>
+                                            <div className={`text-3xl font-black ${Number(lastGame?.payout) > 0 ? 'text-white' : 'text-zinc-600'}`}>
+                                                {multiplier.toFixed(2)}x
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {Number(lastGame?.payout) > 0 && (
+                                        <div className="bg-white text-black px-8 py-3 rounded-full font-black text-xl tracking-wide shadow-lg shadow-white/10">
+                                            +{lastGame?.payout} PT
+                                        </div>
+                                    )}
+
+                                    {/* Timer Bar */}
+                                    <div className="w-full bg-zinc-800/50 h-1 rounded-full overflow-hidden mt-2">
+                                        <motion.div
+                                            initial={{ width: '100%' }}
+                                            animate={{ width: '0%' }}
+                                            transition={{ duration: 5, ease: "linear" }}
+                                            className="h-full bg-white"
+                                        />
+                                    </div>
+                                    <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">
+                                        Closing in {countdown}s
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
-                    </div>
+                    </AnimatePresence>
 
                     {/* Bottom: Interactive Slider */}
                     <div className="w-full h-24 bg-black/40 border-t border-white/10 relative flex items-center px-8 group">
