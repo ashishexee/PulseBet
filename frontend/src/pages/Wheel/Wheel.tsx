@@ -70,23 +70,12 @@ export const Wheel = () => {
             toast.error("Entropy Failure", { description: "The oracle did not respond." });
             return;
         }
-
-        // Calculate Rotation
-        // The Wheel SVG is rotated -90deg via CSS.
-        // Index 0 starts at 0deg (Top) and goes to 36deg (Clockwise).
-        // Center of Index 0 is 18deg.
-        // Pointer is at Top (0deg).
-        // To align Index 0 center (18deg) with Pointer (0deg), we rotate -18deg.
-        // General Formula: -(Index * 36 + 18).
         let nextRotation = -(resultIndex * 36 + 18);
 
-        // adjust to be just below current rotation (to ensure continuity)
-        // We find the nearest multiple of 360 + offset that is <= current rotation
         while (nextRotation > rotation) {
             nextRotation -= 360;
         }
 
-        // Add 5 full rotations for effect
         const minSpin = 360 * 5;
         nextRotation -= minSpin;
 
@@ -94,39 +83,20 @@ export const Wheel = () => {
             rotate: nextRotation,
             transition: {
                 duration: 4,
-                ease: "circOut", // Fast start, slow stop
+                ease: "circOut", 
                 type: "tween"
             }
         });
 
-        setRotation(nextRotation); // Save state
-
-        // Refresh Balance specificially after visual spin ends
+        setRotation(nextRotation);
         await refreshBalance?.();
 
-        // Show Overlay
         const resultData = WHEEL_DATA[resultIndex];
         setLastResult({ index: resultIndex, win: betAmount * resultData.value });
         setShowOverlay(true);
         setCountdown(5);
-
-        // Auto-close timer
-        const timer = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    setShowOverlay(false);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        // Cleanup verification is hard here without ref, but simple interval is fine for now. 
-        // Better to use useEffect for countdown but inline is okay for this flow if carefully managed.
-        // Refactoring to useEffect for consistency with other games.
     };
 
-    // Countdown Effect
     useEffect(() => {
         if (showOverlay) {
             setCountdown(5);

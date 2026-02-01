@@ -26,52 +26,50 @@ export const Card = ({
 
     return (
         <motion.div
-            className="relative w-full aspect-square cursor-pointer"
+            className="relative w-full aspect-square cursor-pointer perspective-1000"
             onClick={!disabled && !isMatched ? onClick : undefined}
             whileHover={!disabled && !isMatched ? { scale: 1.02 } : {}}
             whileTap={!disabled && !isMatched ? { scale: 0.98 } : {}}
         >
             <motion.div
-                className="w-full h-full relative"
+                className="w-full h-full relative preserve-3d"
                 animate={{ rotateY: showFront ? 180 : 0 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20 }}
                 style={{ transformStyle: 'preserve-3d' }}
             >
-                {/* Back side - Minimalist Tech */}
+                {/* Back side - Tech Grid */}
                 <div
-                    className="absolute w-full h-full backface-hidden rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg group"
+                    className="absolute w-full h-full backface-hidden rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shadow-lg group overflow-hidden"
                     style={{ backfaceVisibility: 'hidden' }}
                 >
-                    <div className="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-zinc-500 rounded-full"></div>
+                    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(-45deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px]"></div>
+
+                    <div className="w-12 h-12 rounded-full border border-zinc-800 flex items-center justify-center relative z-10 bg-black/50 backdrop-blur-sm group-hover:border-zinc-700 transition-colors">
+                        <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full group-hover:bg-zinc-400 group-hover:shadow-[0_0_8px_rgba(255,255,255,0.2)] transition-all"></div>
                     </div>
-                    {/* Corner accents */}
-                    <div className="absolute top-2 left-2 w-1 h-1 bg-zinc-800"></div>
-                    <div className="absolute top-2 right-2 w-1 h-1 bg-zinc-800"></div>
-                    <div className="absolute bottom-2 left-2 w-1 h-1 bg-zinc-800"></div>
-                    <div className="absolute bottom-2 right-2 w-1 h-1 bg-zinc-800"></div>
                 </div>
 
-                {/* Front side - Clean Display */}
+                {/* Front side - Content */}
                 <div
-                    className={`absolute w-full h-full backface-hidden rounded-xl flex items-center justify-center border shadow-xl ${isMatched
-                        ? 'bg-zinc-200 border-zinc-200'
+                    className={`absolute w-full h-full backface-hidden rounded-2xl flex items-center justify-center border shadow-xl overflow-hidden ${isMatched
+                        ? 'bg-white border-white'
                         : isFirst
-                            ? 'bg-zinc-800 border-zinc-600'
-                            : 'bg-zinc-950 border-zinc-800'
+                            ? 'bg-zinc-900 border-zinc-700'
+                            : 'bg-zinc-950 border-zinc-700'
                         }`}
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)'
                     }}
                 >
-                    <div className={`text-4xl ${isMatched ? 'grayscale-0' : 'grayscale text-white'}`}>
+                    {isMatched && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-300"></div>
+                    )}
+
+                    <div className={`relative z-10 text-5xl transform transition-transform ${isMatched ? 'scale-110 grayscale-0' : 'grayscale text-white'}`}>
                         {imageId !== null && CARD_IMAGES[imageId]}
                     </div>
-
-                    {isMatched && (
-                        <div className="absolute inset-0 border-2 border-zinc-900 rounded-xl opacity-10"></div>
-                    )}
                 </div>
             </motion.div>
         </motion.div>
