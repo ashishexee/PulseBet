@@ -114,7 +114,7 @@ export const Wheel = () => {
     };
 
     return (
-        <div className="flex flex-col xl:flex-row gap-12 max-w-[1600px] mx-auto p-4 lg:p-8 min-h-[800px] items-center justify-center animate-fade-in font-sans">
+        <div className="flex flex-col xl:flex-row gap-24 max-w-full mx-auto p-8 min-h-[600px] h-[calc(100vh-80px)] items-center justify-center animate-fade-in font-sans overflow-hidden">
             <GameOverlay
                 isConnected={isConnected}
                 connect={connect}
@@ -124,7 +124,7 @@ export const Wheel = () => {
             />
 
             {/* Left Controls */}
-            <div className="w-full max-w-[400px] bg-zinc-900/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col gap-8 shadow-2xl border border-zinc-800/50 shrink-0">
+            <div className="w-full max-w-[420px] bg-zinc-900/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col gap-6 shadow-2xl border border-zinc-800/50 shrink-0">
                 <div className="space-y-1 border-b border-zinc-800 pb-6">
                     <h2 className="text-4xl font-black tracking-tighter text-white uppercase italic">Wheel</h2>
                     <p className="text-zinc-500 text-sm font-medium tracking-wide">Spin the Chaos</p>
@@ -169,14 +169,14 @@ export const Wheel = () => {
             </div>
 
             {/* Right Wheel */}
-            <div className="flex-1 flex items-center justify-center relative min-h-[500px]">
+            <div className="flex-1 flex items-center justify-center relative min-h-[480px]">
                 {/* Pointer */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-8 h-12">
                     <div className="w-0 h-0 border-l-[16px] border-l-transparent border-t-[32px] border-t-white border-r-[16px] border-r-transparent drop-shadow-xl filter"></div>
                 </div>
 
                 <motion.div
-                    className="relative w-[500px] h-[500px] rounded-full border-8 border-zinc-900 shadow-2xl bg-zinc-950 overflow-hidden"
+                    className="relative w-[480px] h-[480px] rounded-full border-8 border-zinc-900 shadow-2xl bg-zinc-950 overflow-hidden"
                     animate={controls}
                     style={{
                         boxShadow: '0 0 100px -20px rgba(168, 85, 247, 0.3)'
