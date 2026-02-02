@@ -13,11 +13,13 @@ import { Wheel } from './pages/Wheel/Wheel';
 import Dice from './pages/Dice/Dice';
 import { Keno } from './pages/Keno/Keno';
 import { CoinToss } from './pages/CoinToss/CoinToss';
+import { ChangelogOverlay } from './components/layout/ChangelogOverlay';
 
 function App() {
   return (
     <BrowserRouter>
       <Layout>
+        <ChangelogOverlay />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/games/mining" element={<Mines />} />

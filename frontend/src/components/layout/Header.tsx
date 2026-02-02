@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Menu, Wallet, LogOut, Copy, Check } from "lucide-react";
+import { Menu, Wallet, LogOut, Copy, Check, Zap } from "lucide-react";
 import { useLineraWallet } from "../../hooks/useLineraWallet";
 import { usePulseToken } from "../../hooks/usePulseToken";
 import { useState, useEffect } from "react";
@@ -10,30 +10,57 @@ interface HeaderProps {
 }
 
 export function Header({ toggleSidebar }: HeaderProps) {
-    const { isConnected, connect, disconnect, chainId, balance, owner, isConnecting } = useLineraWallet();
+    const { isConnected, connect, disconnect, chainId, balance, owner, autosignerOwner, isConnecting } = useLineraWallet();
     const { tokenBalance } = usePulseToken();
     const navigate = useNavigate();
     const [copiedAddress, setCopiedAddress] = useState(false);
     const [copiedChainId, setCopiedChainId] = useState(false);
+    const [copiedAutosigner, setCopiedAutosigner] = useState(false);
     const [toastId, setToastId] = useState<string | number | null>(null);
+
+    useEffect(() => {
+        const retryNeeded = localStorage.getItem("wallet_connect_retry_needed");
+        if (retryNeeded === "true") {
+            toast.warning("Connection Reset", {
+                description: "Previous attempt to connect wallet failed. Please try again, it should work now.",
+                duration: 8000,
+            });
+            localStorage.removeItem("wallet_connect_retry_needed");
+        }
+    }, []);
 
     // Dismiss toast when connection process is fully complete (success or fail)
     useEffect(() => {
         if (!isConnecting && toastId) {
             toast.dismiss(toastId);
             setToastId(null);
-        }
-    }, [isConnecting, toastId]);
 
-    const copyToClipboard = async (text: string, type: 'address' | 'chainId') => {
+            if (isConnected) {
+                toast.success("System Connected", {
+                    description: "You are ready to play. START earning!",
+                    duration: 5000,
+                    style: {
+                        backgroundColor: '#18181b',
+                        color: '#FFFFFF',
+                        border: '1px solid #3f3f46',
+                    },
+                });
+            }
+        }
+    }, [isConnecting, toastId, isConnected]);
+
+    const copyToClipboard = async (text: string, type: 'address' | 'chainId' | 'autosigner') => {
         try {
             await navigator.clipboard.writeText(text);
             if (type === 'address') {
                 setCopiedAddress(true);
                 setTimeout(() => setCopiedAddress(false), 2000);
-            } else {
+            } else if (type === 'chainId') {
                 setCopiedChainId(true);
                 setTimeout(() => setCopiedChainId(false), 2000);
+            } else {
+                setCopiedAutosigner(true);
+                setTimeout(() => setCopiedAutosigner(false), 2000);
             }
         } catch (err) {
             console.error('Failed to copy:', err);
@@ -86,6 +113,20 @@ export function Header({ toggleSidebar }: HeaderProps) {
                             </button>
                         </div>
 
+                        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-zinc-950 rounded-lg border border-zinc-800 group hover:border-emerald-500/50 transition-colors cursor-pointer"
+                            onClick={() => autosignerOwner && copyToClipboard(autosignerOwner, 'autosigner')}
+                            title={autosignerOwner ? "Autosigner Active (Session Key)" : "Autosigner Inactive"}
+                        >
+                            <Zap className={`w-3 h-3 ${autosignerOwner ? "text-emerald-400 fill-emerald-400/20" : "text-zinc-600"}`} />
+                            <span className="text-xs font-mono text-zinc-400 truncate max-w-[80px]">
+                                {autosignerOwner ? "Auto-Signer" : "No Signer"}
+                            </span>
+                            {/* Always show tick if active, or confirmation tick if copied */}
+                            {autosignerOwner && (
+                                <Check className={`w-3 h-3 ${copiedAutosigner ? "text-emerald-400" : "text-emerald-600/60"}`} />
+                            )}
+                        </div>
+
                         {/* Wallet Address */}
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 rounded-lg border border-zinc-800 group hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => owner && copyToClipboard(owner, 'address')}>
                             <span className="text-xs font-mono text-white truncate max-w-[80px]">
@@ -106,9 +147,14 @@ export function Header({ toggleSidebar }: HeaderProps) {
                     <button
                         onClick={() => {
                             connect();
-                            const id = toast.info("Wallet Connection Initiated", {
-                                description: "Please confirm the autosigner authorization in MetaMask to proceed.",
-                                duration: 8000,
+                            const id = toast.loading("Please wait for MetaMask popup", {
+                                description: "This confirmation is to authorize the Auto-Signer for instant play.",
+                                duration: 10000,
+                                style: {
+                                    background: '#000',
+                                    color: '#fff',
+                                    border: '1px solid #333'
+                                }
                             });
                             setToastId(id);
                         }}

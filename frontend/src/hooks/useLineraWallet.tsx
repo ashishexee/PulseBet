@@ -240,8 +240,9 @@ export const LineraWalletProvider = ({ children }: { children: React.ReactNode }
 
             if (isFatal) {
                 console.error("FATAL SYNC ERROR DETECTED. INITIATING AUTO-RESET...");
+                localStorage.setItem("wallet_connect_retry_needed", "true"); // Signal to UI to show toast after reload
                 setError("Critical Sync Error Detected. Resetting Network...");
-                await disconnect(); // This clears IndexedDB and reloads
+                await disconnect();
                 return;
             }
 
