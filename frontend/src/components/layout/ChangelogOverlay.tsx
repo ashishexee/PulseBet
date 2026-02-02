@@ -59,7 +59,7 @@ export function ChangelogOverlay() {
                                 <div>
                                     <h3 className="text-lg font-bold text-white mb-1">Seamless Auto-Signer</h3>
                                     <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                                        Checking the header badge? That's our new <strong>Session Key</strong> system! Thanks to <a href="https://app.akindo.io/users/deuszx" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-semibold hover:underline">@deuszx</a>,
+                                        Checking the header badge? That's our new <strong>Session Key</strong> system! Thanks to <a href="https://app.akindo.io/users/deuszx" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-semibold hover:underline">@deuszx</a> and <a href="https://app.akindo.io/users/ma2bd" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-semibold hover:underline">@ma2bd</a>,
                                         you can now play games instantly. The Autosigner handles all your fast-paced gameplay moves in the background without annoying interruptions.
                                     </p>
                                     <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-lg">

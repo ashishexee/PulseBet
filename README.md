@@ -1,19 +1,29 @@
-# PulseBet: Linera Hackathon Documentation
+![PulseBet Banner](assets/banner/banner.png)
 
-<img src="../assets/banner/banner.png" width="100%" alt="PulseBet Banner" />
-
-## 🎯 Executive Summary
-
-**PulseBet** is a groundbreaking real-time gaming platform built entirely on the **Linera Layer-1 microchain protocol**. This hackathon submission demonstrates the power of Linera's architecture through multiple game implementations, showcasing both **single-player cross-application calls** and **multiplayer cross-chain messaging**.
-
-Our journey began with single-player games like Mines and Memory, then evolved to implement **successful cross-chain multiplayer experiences** in DotsAndBoxes and Bingo, proving Linera's capability to handle complex, real-time interactions across multiple microchains.
+**A Fully Decentralized Betting Platform built on the Linera Layer-1 blockchain.**  
+Wager PulseTokens on Games to earn rewards with instant finality.
 
 ---
+## 🌊 Wave 5 Major Updates
 
-## 🏗️ System Architecture
+We have significantly leveled up the experience for the **Wave 5 Submission**:
 
-### High-Level Overview
-![System architecture](/assets/banner/ss/system_architecture.png)
+### ⚡ Seamless Auto-Signer (Session Keys)
+- **Zero-Friction Gameplay**: Integrated a secure "Autosigner" that creates a session key for instant game moves. No more MetaMask popups for every single click!
+- **Security First**: Critical financial actions (Staking/Claiming) still require explicit wallet confirmation.
+- Special thanks to **[@deuszx](https://app.akindo.io/users/deuszx)** and **[@ma2bd](https://app.akindo.io/users/ma2bd)** for the inspiration and judging feedback!
+
+### 🎰 New Arcade Games
+The arena heavily expanded with 5 new adrenaline-pumping titles:
+- **Plinko**: Physics-based ball drop multiplier.
+- **Keno**: Classic lottery-style number matching.
+- **Wheel**: High-stakes spin-to-win.
+- **Dice**: Controllable risk/reward rolling.
+- **Coin Toss**: The ultimate 50/50 showdown.
+
+### 🎨 Visual & UX Overhaul
+- **Dark Glassmorphism**: A complete UI redesign featuring premium dark aesthetics, neon accents, and responsive layouts.
+- **Intelligent Toasts**: Real-time feedback system for wins, losses, and transaction states.
 
 
 ### Key Architectural Principles
