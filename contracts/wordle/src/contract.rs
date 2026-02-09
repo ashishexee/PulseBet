@@ -11,13 +11,8 @@ use linera_sdk::{
 use wordle::{Operation, WordleAbi};
 use state::{WordleState, GameSession};
 
-const WORDS: [&str; 50] = [
-    "APPLE", "BEAST", "FAINT", "FEAST", "FRUIT", "GLASS", "GRAPE", "GREEN", "GHOST", "HEART",
-    "HOUSE", "IMAGE", "ISSUE", "IVORY", "JUICE", "KNIFE", "LEMON", "LIGHT", "LUNCH", "MAJOR",
-    "MARCH", "METAL", "MODEL", "MONEY", "MONTH", "MOTOR", "MOUSE", "MUSIC", "NIGHT", "NORTH",
-    "NOVEL", "NURSE", "OFFER", "ORDER", "PAPER", "PARTY", "PEACE", "PHONE", "PIANO", "PILOT",
-    "PLANE", "PLANT", "PLATE", "POINT", "POUND", "POWER", "PRICE", "PRIDE", "PRIZE", "PROOF"
-];
+mod words;
+use words::WORDS;
 
 pub struct WordleContract {
     state: WordleState,

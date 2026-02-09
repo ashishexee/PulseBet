@@ -39,11 +39,19 @@ const WORDLE_RULES = (
 );
 
 export const Wordle: React.FC = () => {
-    const { gameSession, loading, startGame, submitGuess } = useWordle();
+    const { gameSession, loading, startGame: hookStartGame, submitGuess, endGame } = useWordle();
     const { isConnected, connect } = useLineraWallet();
     const [currentGuess, setCurrentGuess] = useState("");
 
-    // const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const startGame = useCallback(async () => {
+        try {
+            setCurrentGuess("");
+            await hookStartGame();
+        } catch (e) {
+            console.error("Failed to start game:", e);
+            toast.error("Failed to start game. Please try again.");
+        }
+    }, [hookStartGame]);
 
     const handleChar = useCallback((char: string) => {
         if (gameSession?.isOver) return;
@@ -149,7 +157,7 @@ export const Wordle: React.FC = () => {
                                         {gameSession.isWon ? "UNLOCKED" : "FAILED"}
                                     </h2>
                                     <p className="text-zinc-500 font-mono text-xs tracking-widest mb-8 uppercase">
-                                        {gameSession.isWon ? "Protocol Synchronization Complete" : "Entropy limit reached"}
+                                        {gameSession.isWon ? "Congrats! You guessed the word" : "Entropy limit reached"}
                                     </p>
 
                                     {!gameSession.isWon && (
@@ -176,7 +184,7 @@ export const Wordle: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="w-full flex justify-center z-10 pb-8">
+                <div className="w-full flex flex-col items-center gap-4 z-10 pb-8">
                     <Keyboard
                         onChar={handleChar}
                         onDelete={handleDelete}
@@ -184,6 +192,15 @@ export const Wordle: React.FC = () => {
                         guesses={gameSession.guesses}
                         feedbackHistory={gameSession.feedbackHistory}
                     />
+
+                    {!gameSession.isOver && (
+                        <button
+                            onClick={endGame}
+                            className="px-6 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 text-xs font-bold tracking-widest rounded-full transition-all uppercase"
+                        >
+                            End Game
+                        </button>
+                    )}
                 </div>
 
                 {loading && (

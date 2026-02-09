@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLineraWallet } from './useLineraWallet';
 
 export interface GameSession {
@@ -15,6 +15,10 @@ export const useWordle = () => {
     const [gameSession, setGameSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(false);
     const [validWords, setValidWords] = useState<Set<string> | null>(null);
+
+    // Use ref to track surrender state immediately without waiting for re-renders
+    const isSurrenderedRef = useRef(false);
+    const [, forceUpdate] = useState({});
 
     const APP_ID = import.meta.env.VITE_WORDLE_APP_ID;
     useEffect(() => {
@@ -50,9 +54,12 @@ export const useWordle = () => {
     const refreshState = useCallback(async () => {
         if (!isConnected || !owner) return;
 
+        // Query should use autosigner if available since that's who starts the game
+        const activeOwner = autosignerOwner || owner;
+
         // Query needs owner argument
         const FETCH_GAME = `{
-            game(owner: "${owner}") {
+            game(owner: "${activeOwner}") {
                 targetWord
                 attempts
                 guesses
@@ -65,7 +72,13 @@ export const useWordle = () => {
         try {
             const data = await executeQuery(FETCH_GAME);
             if (data?.game) {
-                setGameSession(data.game);
+                const game = data.game;
+                // Check ref for immediate updates
+                if (isSurrenderedRef.current) {
+                    game.isOver = true;
+                    game.isWon = false;
+                }
+                setGameSession(game);
             } else {
                 setGameSession(null);
             }
@@ -75,19 +88,30 @@ export const useWordle = () => {
     }, [isConnected, executeQuery, owner]);
 
     const startGame = async () => {
+        if (!client || !chainId || !APP_ID || !autosignerOwner) {
+            console.error("AutoSigner not ready");
+            return;
+        }
         setLoading(true);
+        isSurrenderedRef.current = false;
+        forceUpdate({}); // Trigger re-render to update UI helper text if needed
+
         const mutation = `mutation {
             startGame
         }`;
         try {
-            if (!client || !chainId || !APP_ID || !owner) return;
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner });
+            console.log("Start game request:", requestBody);
+            const response = await app.query(requestBody, { owner: autosignerOwner });
+            console.log("Start game response:", response);
             await refreshState();
         } catch (e) {
             console.error("Start game failed:", e);
+            isSurrenderedRef.current = true;
+            forceUpdate({});
+            throw e;
         } finally {
             setLoading(false);
         }
@@ -96,13 +120,12 @@ export const useWordle = () => {
     const submitGuess = async (guess: string) => {
         const upperGuess = guess.toUpperCase();
 
-    if (validWords && !validWords.has(upperGuess)) {
+        if (validWords && !validWords.has(upperGuess)) {
             throw new Error("Word not in dictionary");
         }
 
         if (!client || !chainId || !APP_ID || !autosignerOwner) return;
         setLoading(true);
-        // Ensure guess is valid for string interpolation (sanitize if needed, but it's alphanumeric 5 chars)
         const mutation = `mutation {
             submitGuess(guess: "${upperGuess}")
         }`;
@@ -110,7 +133,9 @@ export const useWordle = () => {
             const chain = await client.chain(chainId);
             const app = await chain.application(APP_ID);
             const requestBody = JSON.stringify({ query: mutation });
-            await app.query(requestBody, { owner: autosignerOwner });
+            console.log("Submit guess request:", requestBody);
+            const response = await app.query(requestBody, { owner: autosignerOwner });
+            console.log("Submit guess response:", response);
             await refreshState();
         } catch (e) {
             console.error("Submit guess failed:", e);
@@ -120,7 +145,12 @@ export const useWordle = () => {
         }
     };
 
-    // Poll for updates
+    const endGame = useCallback(() => {
+        isSurrenderedRef.current = true;
+        forceUpdate({}); // Trigger re-render to update UI
+        setGameSession(prev => prev ? { ...prev, isOver: true, isWon: false } : null);
+    }, []);
+
     useEffect(() => {
         const interval = setInterval(refreshState, 2000);
         return () => clearInterval(interval);
@@ -136,6 +166,7 @@ export const useWordle = () => {
         loading,
         startGame,
         submitGuess,
+        endGame,
         refreshState
     };
 };
